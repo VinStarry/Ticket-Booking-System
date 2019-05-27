@@ -39,6 +39,8 @@ final class Flight_table {
     public const DURATION = "F_DURATION";
     public const DEPART_PLACE = "F_DEPARTPLACE";
     public const ARRIVE_PLACE = "F_ARRIVEPLACE";
+    public const BEGIN_SERVICE = "F_BEGIN";
+    public const END_SERVICE = "F_END";
     public const SEATS_TOTAL = "F_SEATSTOTAL";
     public const SEATS_TAKEN = "F_SEATSTAKEN";  // calculated from Seat table and Order table
 }
