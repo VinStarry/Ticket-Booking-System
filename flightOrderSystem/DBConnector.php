@@ -1,5 +1,9 @@
 <?php
 
+include_once 'config.php';
+
+use config\DB_info as INFO;
+
 class DBException extends Exception {
     function __construct($message = "", $code = 0, Throwable $previous = null) {
         parent::__construct($message, $code, $previous);
@@ -17,13 +21,13 @@ class DBConnector {
      * construct connection to MySQL based on parameters
      * pay ATTENTION that these parameters (including the link itself) are PRIVATE variables
      */
-    function __construct(string $db_host, string $db_user, string $db_password, string $db_name) {
-        $this->db_host = $db_host;
-        $this->db_user = $db_user;
-        $this->db_password = $db_password;
-        $this->db_name = $db_name;
+    function __construct() {
+        $this->db_host = INFO::SERVER_ADDRESS;
+        $this->db_user = INFO::DATABASE_USER_NAME;
+        $this->db_password = INFO::DATABASE_USER_PSW;
+        $this->db_name = INFO::DATABASE_NAME;
 
-        $this->link = mysqli_connect($db_host, $db_user, $db_password, $db_name);
+        $this->link = mysqli_connect($this->db_host, $this->db_user, $this->db_password, $this->db_name);
 
         try {
             if (!$this->link) {
@@ -36,6 +40,10 @@ class DBConnector {
         catch (DBException $e) {
             echo "Error code ".$e->getCode().". ".$e->getMessage();
         }
+    }
+
+    function get_city_from_code(string $code) {
+//        $query = "select "
     }
 
     /*
