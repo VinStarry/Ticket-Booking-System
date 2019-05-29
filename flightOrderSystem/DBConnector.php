@@ -13,6 +13,10 @@ class DBConnector {
     private $db_name;
     private $link;
 
+    /*
+     * construct connection to MySQL based on parameters
+     * pay ATTENTION that these parameters (including the link itself) are PRIVATE variables
+     */
     function __construct(string $db_host, string $db_user, string $db_password, string $db_name) {
         $this->db_host = $db_host;
         $this->db_user = $db_user;
@@ -46,6 +50,9 @@ class DBConnector {
             printf("%s <br />", $table_name);
     }
 
+    /*
+     * destructor simply close the connection between PHP and MySQL
+     */
     function __destruct() {
         mysqli_close($this->link);
     }
