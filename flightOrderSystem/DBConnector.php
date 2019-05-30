@@ -42,8 +42,106 @@ class DBConnector {
         }
     }
 
+    function get_full_table(string $table_name) {
+        try {
+            $query = "select * " .
+                " from " . $table_name . ";";
+            $result = $this->link->query($query);
+            $number_column = $result->field_count;
+            $ret = array();
+
+            // fetch columns and rows
+            while ($row = $result->fetch_row()) {
+                $ret[] = $row;
+            }
+
+            echo count($ret);
+
+            $result->free();
+            return $ret;
+        }
+        catch (mysqli_sql_exception $ex) {
+            echo $ex->getMessage();
+            throw $ex;
+        }
+    }
+
+    /**
+     * @param string $code: the code corresponding to the airport
+     * @example: input --> PVG
+     *          output --> 上海
+     */
     function get_city_from_code(string $code) {
-//        $query = "select "
+        try {
+            $query = "select " . config\Code_CITY::CITY .
+                " from " . config\Code_CITY::NAME .
+                " where " . config\Code_CITY::CODE . " = \"" . $code . "\";";
+                    $result = $this->link->query($query);
+            if(list($city) = $result->fetch_row()) {
+                $result->free();
+                return $city;
+            }
+            else {
+                $result->free();
+                return null;
+            }
+        }
+        catch (mysqli_sql_exception $ex) {
+            echo $ex->getMessage();
+            throw $ex;
+        }
+    }
+
+    /**
+     * @param string $city: a city's name
+     * @example: input --> 上海
+     *          output --> [PVG, SHA]
+     */
+    function get_code_from_city(string $city) {
+        try {
+            $query = "select " . config\Code_CITY::CODE .
+                " from " . config\Code_CITY::NAME .
+                " where " . config\Code_CITY::CITY . " = \"" . $city . "\";";
+            $result = $this->link->query($query);
+            $codes = array();
+            while(list($code) = $result->fetch_row()) {
+                $codes[] = $code;
+            }
+            $result->free();
+            return $codes;
+        }
+        catch (mysqli_sql_exception $ex) {
+            echo $ex->getMessage();
+            throw $ex;
+        }
+    }
+
+    /**
+     * @param string $city: a city's name
+     * @return array 2D array
+     * @example: input --> 上海
+     *           output --> [[PVG, 上海浦东国际机场] , [SHA, 上海虹桥国际机场]]
+     */
+    function get_airport_and_code_from_city(string $city) {
+        try {
+            $query = "select " . config\Code_CITY::CODE . ", " . config\Code_CITY::AP_NAME .
+                " from " . config\Code_CITY::NAME .
+                " where " . config\Code_CITY::CITY . " = \"" . $city . "\";";
+            $result = $this->link->query($query);
+            $ret = array();
+            while(list($code, $airport) = $result->fetch_row()) {
+                $row = array();
+                $row[] = $code;
+                $row[] = $airport;
+                $ret[] = $row;
+            }
+            $result->free();
+            return $ret;
+        }
+        catch (mysqli_sql_exception $ex) {
+            echo $ex->getMessage();
+            throw $ex;
+        }
     }
 
     /*
@@ -56,6 +154,7 @@ class DBConnector {
         echo "Tables in ". $this->db_name. " are shown below: <br />";
         while(list($table_name) = $result->fetch_row())
             printf("%s <br />", $table_name);
+        $result->free();
     }
 
     /*
