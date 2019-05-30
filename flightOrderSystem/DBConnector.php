@@ -42,6 +42,12 @@ class DBConnector {
         }
     }
 
+    /**
+     * display whole table
+     * @param string $table_name: the table name
+     * @return array whole table stored in array
+     * TODO: BUG FIX
+     */
     function get_full_table(string $table_name) {
         try {
             $query = "select * " .
