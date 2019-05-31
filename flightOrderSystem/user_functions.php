@@ -8,6 +8,7 @@ class user_exception_codes {
     public const PswTooLong = 2;
     public const TelTooLong = 3;
     public const InsertAcconutFailed = 4;
+    public const AccountNotExist = 5;
 }
 
 class user_exception extends Exception {
@@ -28,10 +29,34 @@ class user_exception extends Exception {
                 return "Telephone too long.";
             case user_exception_codes::InsertAcconutFailed:
                 return "Insert into user account table falied";
+            case user_exception_codes::AccountNotExist:
+                return "Sorry, this Account do not exist";
             default:
                 return "Some user exception occurred.";
         }
     }
+}
+
+class flight_User {
+    /**
+     * User basic info
+     */
+    public $UID;
+    public $UName;
+    public $UTelephone;
+
+    /**
+     * flight_User constructor. Construct basic info
+     * @param int $uid      User's ID
+     * @param string $uname User's Name
+     * @param string $utel  User's telephone number (string)
+     */
+    public function __construct(int $uid, string $uname, string $utel) {
+        $this->UID = $uid;
+        $this->UName = $uname;
+        $this->UTelephone = $utel;
+    }
+
 }
 
 final class User_functions {
@@ -39,13 +64,6 @@ final class User_functions {
      * Constants
      */
     const TRY_TIMES = 3;
-
-    /**
-     * User tag
-     */
-    private $UID = null;
-    private $UName = null;
-    private $UTelephone = null;
 
     /**
      * create an account for user, and insert it into User_table
@@ -107,10 +125,34 @@ final class User_functions {
         }
     }
 
+    /**
+     * this function is for user login
+     * @param mysqli $link          mysqli connection
+     * @param string $uid           user input id
+     * @param string $upsw          user input password
+     * @return flight_User|null     return a new user class object, return null if psw is not correct
+     * @throws user_exception   some exception specified by Code
+     */
     public static function login_account(mysqli &$link, string $uid, string $upsw) {
         try {
-            $query = "select * from " . config\User_table::NAME . " where " . config\User_table::ID . " = " . $uid;
-            echo $query;
+            $query = "select " .config\User_table::PASSWORD . "," . config\User_table::UNAME . ","
+                . config\User_table::TELEPHONE .
+                " from " . config\User_table::NAME .
+                " where " . config\User_table::ID . " = " . $uid . ";";
+            $result = $link->query($query);
+            list($expect_psw, $uname, $utelephone) = $result->fetch_row();
+            $result->free();
+            if ($expect_psw == null) {
+                throw new user_exception(user_exception_codes::AccountNotExist);
+            }
+            else {
+                if (!strcmp($expect_psw, $upsw)) {
+                    return new flight_User($uid, $uname, $utelephone);
+                }
+                else {
+                    return null;
+                }
+            }
         }
         catch (mysqli_sql_exception $ex) {
             echo $ex->getMessage();
