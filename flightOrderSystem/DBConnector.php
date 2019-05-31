@@ -15,7 +15,7 @@ class DBConnector {
     private $db_user;
     private $db_password;
     private $db_name;
-    private $link;
+    public $link;
 
     /*
      * construct connection to MySQL based on parameters
