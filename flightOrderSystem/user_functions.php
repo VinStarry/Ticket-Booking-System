@@ -89,6 +89,10 @@ final class User_functions {
                 echo $ex->getMessage();
                 throw $ex;
             }
+            finally {
+                // whatever happened, set mode to autocommit
+                $link->autocommit(true);
+            }
         }
     }
 
