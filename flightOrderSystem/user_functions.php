@@ -36,6 +36,18 @@ class user_exception extends Exception {
 
 final class User_functions {
     /**
+     * Constants
+     */
+    const TRY_TIMES = 3;
+
+    /**
+     * User tag
+     */
+    private $UID = null;
+    private $UName = null;
+    private $UTelephone = null;
+
+    /**
      * create an account for user, and insert it into User_table
      * @param mysqli $link:  mysqli connection
      * @param string $name:  user input name
@@ -43,7 +55,6 @@ final class User_functions {
      * @param string $tel:  user input telephone
      * @throws user_exception   some exception specified by Code
      */
-    const TRY_TIMES = 3;
     public static function create_account(mysqli &$link, string $name, string $psw, string $tel) {
         if (strlen($name) >= 30) {
             throw new user_exception(user_exception_codes::NameTooLong);
@@ -66,7 +77,7 @@ final class User_functions {
                     list($maxid) = $result->fetch_row();
                     $id = ($maxid == null) ? 60001 : $maxid + 1;
                     $insert_account = "insert into " . config\User_table::NAME .
-                        " values(" . "$id,'$name','$psw','$tel'" . ");";
+                        " values(" . "$id,'$psw','$name','$tel'" . ");";
                     $link->query($insert_account, MYSQLI_STORE_RESULT);
                     if ($link->affected_rows != 0) {
                         $link->commit();    // commit this transaction
@@ -96,6 +107,15 @@ final class User_functions {
         }
     }
 
-//    public static function login_account(mysqli &$link, )
+    public static function login_account(mysqli &$link, string $uid, string $upsw) {
+        try {
+            $query = "select * from " . config\User_table::NAME . " where " . config\User_table::ID . " = " . $uid;
+            echo $query;
+        }
+        catch (mysqli_sql_exception $ex) {
+            echo $ex->getMessage();
+            throw $ex;
+        }
+    }
 
 }
