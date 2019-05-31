@@ -1,16 +1,12 @@
 <?php
 include_once 'config.php';
 include_once 'DBConnector.php';
-
-use config\DB_info as INFO;
+include_once 'user_functions.php';
 
 error_reporting(E_ALL & E_STRICT);
 
-$conn = new DBConnector(INFO::SERVER_ADDRESS,
-                            INFO::DATABASE_USER_NAME,
-                        INFO::DATABASE_USER_PSW,
-                            INFO::DATABASE_NAME);
-
-$conn->showTables();
+$conn = new DBConnector();
+$user = User_functions::login_account($conn->link, 60001, 'tonybrown911');
+//echo "$user->UID : $user->UName : $user->UTelephone <br />"
 
 ?>
