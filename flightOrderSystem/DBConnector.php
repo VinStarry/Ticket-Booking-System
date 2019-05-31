@@ -46,7 +46,6 @@ class DBConnector {
      * display whole table
      * @param string $table_name: the table name
      * @return array whole table stored in array
-     * TODO: BUG FIX
      */
     function get_full_table(string $table_name) {
         try {
@@ -58,10 +57,12 @@ class DBConnector {
 
             // fetch columns and rows
             while ($row = $result->fetch_row()) {
-                $ret[] = $row;
+                $temp = array();
+                for ($i = 0; $i < $number_column; $i++) {
+                    $temp[] = $row[$i];
+                }
+                $ret[] = $temp;
             }
-
-            echo count($ret);
 
             $result->free();
             return $ret;
@@ -161,6 +162,20 @@ class DBConnector {
         while(list($table_name) = $result->fetch_row())
             printf("%s <br />", $table_name);
         $result->free();
+    }
+
+    /**
+     * print the whole table, used for debugging
+     * @param array $arr the table
+     */
+    final function printWholeTable(array $arr) {
+        for ($i = 0; $i < count($arr); $i++) {
+            $row = $arr[$i];
+            for ($j = 0; $j < count($row); $j++) {
+                echo $row[$j] . " ";
+            }
+            echo "<br />";
+        }
     }
 
     /*
