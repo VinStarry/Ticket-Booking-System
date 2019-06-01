@@ -44,17 +44,20 @@ class flight_User {
     public $UID;
     public $UName;
     public $UTelephone;
+    private $UBalance;
 
     /**
      * flight_User constructor. Construct basic info
      * @param int $uid      User's ID
      * @param string $uname User's Name
      * @param string $utel  User's telephone number (string)
+     * @param string $ubalance User's balance, defalut $5000.00
      */
-    public function __construct(int $uid, string $uname, string $utel) {
+    public function __construct(int $uid, string $uname, string $utel, string $ubalance) {
         $this->UID = $uid;
         $this->UName = $uname;
         $this->UTelephone = $utel;
+        $this->UBalance = $ubalance;
     }
 
 }
@@ -118,6 +121,9 @@ final class User_functions {
                 echo $ex->getMessage();
                 throw $ex;
             }
+            catch (user_exception $ex) {
+                throw $ex;
+            }
             finally {
                 // whatever happened, set mode to autocommit
                 $link->autocommit(true);
@@ -136,18 +142,18 @@ final class User_functions {
     public static function login_account(mysqli &$link, string $uid, string $upsw) {
         try {
             $query = "select " .config\User_table::PASSWORD . "," . config\User_table::UNAME . ","
-                . config\User_table::TELEPHONE .
+                . config\User_table::TELEPHONE . "," .config\User_table::BALANCE .
                 " from " . config\User_table::NAME .
                 " where " . config\User_table::ID . " = " . $uid . ";";
             $result = $link->query($query);
-            list($expect_psw, $uname, $utelephone) = $result->fetch_row();
+            list($expect_psw, $uname, $utelephone, $ubalance) = $result->fetch_row();
             $result->free();
             if ($expect_psw == null) {
                 throw new user_exception(user_exception_codes::AccountNotExist);
             }
             else {
                 if (!strcmp($expect_psw, $upsw)) {
-                    return new flight_User($uid, $uname, $utelephone);
+                    return new flight_User($uid, $uname, $utelephone, $ubalance);
                 }
                 else {
                     return null;
@@ -158,6 +164,8 @@ final class User_functions {
             echo $ex->getMessage();
             throw $ex;
         }
+        catch (user_exception $ex) {
+            throw $ex;
+        }
     }
-
 }
