@@ -23,6 +23,7 @@ final class User_table {
     public const PASSWORD = "U_PASSWORD";   // @datatype: char(30)
     public const UNAME = "U_NAME";          // @datatype: char(30)
     public const TELEPHONE = "U_TELEPHONE"; // @datatype: char(20)
+    public const BALANCE = "U_BALANCE";     // @datatype: decimal(8,2)
 }
 
 final class Order_table {
