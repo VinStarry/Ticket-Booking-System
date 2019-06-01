@@ -2,16 +2,16 @@
 
 
 class Flight {
-    public $fid;
-    public $f_type;
-    public $depart_time;
-    public $duration;
-    public $depart_place;
-    public $arrive_place;
-    public $begin_service_date;
-    public $end_service_date;
-    public $seats_total;
-    public $seats_taken;
+    private $fid;
+    private $f_type;
+    private $depart_time;
+    private $duration;
+    private $depart_place;
+    private $arrive_place;
+    private $begin_service_date;
+    private $end_service_date;
+    private $seats_total;
+    private $seats_taken;
 
     public function __construct($fid, $f_type, $depart_time,
                                 $duration, $depart_place, $arrive_place,
