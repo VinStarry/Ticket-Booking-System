@@ -45,11 +45,22 @@ class admin_functions {
     private $conn;
     private const RETRY_TIMES = 5;
 
+    /**
+     * admin_functions constructor.
+     * Be careful that the constructor should create a DBConnector
+     * and create airports codes' array
+     */
     function __construct() {
         $this->conn = new DBConnector();
         $this->airports = $this->conn->get_all_airports_code();
     }
 
+    /**
+     * PAY ATTENTION to ERROR HANDLE and INPUT CHECK
+     * @params basic information about flight
+     *  this should always create seats for flight
+     * @throws admin_exception
+     */
     function add_flight($fid, $f_type, $depart_time,
                         $duration, $depart_place, $arrive_place,
                         $begin_service_date, $end_service_date, $seats_total) {
@@ -84,7 +95,9 @@ class admin_functions {
                     $insert_flight_query = "insert into " .config\Flight_table::NAME . " values(" .
                     $new_flight. ");";
                     $this->conn->link->query($insert_flight_query, MYSQLI_STORE_RESULT);
-                    if ($this->conn->link->affected_rows != 0) {
+                    $insert_flight_result = $this->conn->link->affected_rows;
+                    // TODO: create seats for the flight
+                    if ($insert_flight_result != 0) {
                         $this->conn->link->commit();    // commit this transaction
                         $succeeded = true;
                         $this->conn->link->autocommit(true);
@@ -108,6 +121,7 @@ class admin_functions {
             throw $ex;
         }
         finally {
+            // Ensure that autocommit should be reopen
             $this->conn->link->autocommit(true);
         }
     }
