@@ -74,6 +74,28 @@ class DBConnector {
     }
 
     /**
+     * get all airports' code
+     * @return array the array contains all airports' code in the database
+     */
+    function get_all_airports_code() {
+        try {
+            $query = "select " . config\Code_CITY::CODE .
+                " from " . config\Code_CITY::NAME .";";
+            $result = $this->link->query($query);
+            $ret = array();
+            while(list($code) = $result->fetch_row()) {
+                $ret[] = $code;
+            }
+            $result->free();
+            return $ret;
+        }
+        catch (mysqli_sql_exception $ex) {
+            echo $ex->getMessage();
+            throw $ex;
+        }
+    }
+
+    /**
      * @param string $code: the code corresponding to the airport
      * @example: input --> PVG
      *          output --> 上海
