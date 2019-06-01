@@ -119,7 +119,7 @@ class admin_functions {
                     for ($i = 1; $i <= $Fnum; $i++) {
                         $insert_seat_query = "insert into " .config\Seat_table::NAME . " values(" .
                             $i . "," . "'F'" . "," .
-                            $fprice . "," . 0 . "," . $fid . ");";
+                            $fprice . "," . $fid . ");";
 //                        echo $insert_seat_query . "<br />";
                         $this->conn->link->query($insert_seat_query, MYSQLI_STORE_RESULT);
                         $cnt += $this->conn->link->affected_rows;
@@ -129,7 +129,7 @@ class admin_functions {
                     for ($i = 1 + $Fnum; $i <= $Cnum + $Fnum; $i++) {
                         $insert_seat_query = "insert into " .config\Seat_table::NAME . " values(" .
                             $i . "," . "'C'" . "," .
-                            $fprice . "," . 0 . "," . $fid . ");";
+                            $fprice . "," . $fid . ");";
 //                        echo $insert_seat_query . "<br />";
                         $this->conn->link->query($insert_seat_query, MYSQLI_STORE_RESULT);
                         $cnt += $this->conn->link->affected_rows;
@@ -139,7 +139,7 @@ class admin_functions {
                     for ($i = 1; $i <= $Enum; $i++) {
                         $insert_seat_query = "insert into " .config\Seat_table::NAME . " values(" .
                             ($i + $Fnum + $Cnum) . "," . "'E'" . "," .
-                            $eprice . "," . 0 . "," . $fid . ");";
+                            $eprice . "," . $fid . ");";
 //                        echo $insert_seat_query . "<br />";
                         $this->conn->link->query($insert_seat_query, MYSQLI_STORE_RESULT);
                         $cnt += $this->conn->link->affected_rows;
@@ -173,5 +173,36 @@ class admin_functions {
             // Ensure that autocommit should be reopen
             $this->conn->link->autocommit(true);
         }
+    }
+
+    function revise_flight($fid, string $new_type = null,
+                           string $new_begin_date = null, string $new_end_date = null) {
+
+    }
+
+    function delete_flight($fid) {
+
+    }
+
+    function add_flying_date($fid, string $begin_date,
+                             string $end_date, int $interval_days) {
+        //TODO: first
+
+    }
+
+    function delete_flying_date($fid, $cancel_date) {
+
+    }
+
+    function list_data() {
+
+    }
+
+    function show_revenue_by_day() {
+
+    }
+
+    function show_revenue_by_month() {
+
     }
 }
