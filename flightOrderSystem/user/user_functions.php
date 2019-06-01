@@ -85,7 +85,7 @@ final class User_functions {
     /**
      * Constants
      */
-    const TRY_TIMES = 3;
+    const RETRY_TIMES = 3;
 
     /**
      * create an account for user, and insert it into User_table
@@ -107,7 +107,7 @@ final class User_functions {
         }
         else {
             try {
-                $try_times = self::TRY_TIMES;
+                $retry_times = self::RETRY_TIMES;
                 $succeeded = false;
                 do {
                     $link->autocommit(false);
@@ -129,8 +129,8 @@ final class User_functions {
                         $link->rollback();
                         $link->autocommit(true);
                     }
-                    $try_times--;
-                }while($try_times != 0);
+                    $retry_times--;
+                }while($retry_times != 0);
                 if ($succeeded == false) {
                     // Already tried TRY_TIMES times but still failed, this is mainly because
                     // the server is busy at the time being
