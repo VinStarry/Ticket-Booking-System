@@ -1,6 +1,6 @@
 <?php
 
-include_once 'Flight.php';
+include_once '../common/Flight.php';
 include_once '../common/DBConnector.php';
 
 class admin_exception_codes {
@@ -10,6 +10,7 @@ class admin_exception_codes {
     public const SeatsNotNumeric = 3;
     public const FIDAlreadyExist = 4;
     public const InsertFlightFailed = 5;
+    public const InvalidSeatsParam = 6;
 }
 
 class admin_exception extends Exception {
@@ -33,6 +34,8 @@ class admin_exception extends Exception {
                 return "This FID already exists, please check carefully.";
             case admin_exception_codes::InsertFlightFailed:
                 return "Falied too many times, probably the server is busy";
+            case admin_exception_codes::InvalidSeatsParam:
+                return "The parameter you set for seats is not in correct format";
             default:
                 return "Some admin exception occurred.";
         }
@@ -63,13 +66,18 @@ class admin_functions {
      */
     function add_flight($fid, $f_type, $depart_time,
                         $duration, $depart_place, $arrive_place,
-                        $begin_service_date, $end_service_date, $seats_total) {
+                        $begin_service_date, $end_service_date, $seats_total,
+                        string $E_seat_price, string $C_seat_number, string $C_seat_price,
+                        string $F_seat_number, string $F_seat_price) {
         $new_flight = new Flight($fid, $f_type, $depart_time,
             $duration, $depart_place, $arrive_place,
             $begin_service_date, $end_service_date, $seats_total);
 
         /* input parameters tests */
         try {
+            $eprice = new decimal2P($E_seat_price);
+            $cprice = new decimal2P($C_seat_price);
+            $fprice = new decimal2P($F_seat_price);
             if (!is_numeric($fid)) {
                 throw new admin_exception(admin_exception_codes::FIDNotNumeric);
             }
@@ -78,6 +86,12 @@ class admin_functions {
             }
             else if (!is_numeric($seats_total)) {
                 throw new admin_exception(admin_exception_codes::SeatsNotNumeric);
+            }
+            else if (!is_numeric($F_seat_number) || !is_numeric($C_seat_number)) {
+                throw new admin_exception(admin_exception_codes::InvalidSeatsParam);
+            }
+            else if (($eprice == null) || ($cprice == null) || ($fprice == null)) {
+                throw new admin_exception(admin_exception_codes::InvalidSeatsParam);
             }
             else {
                 $search_fid = "select " . config\Flight_table::ID .
@@ -96,8 +110,42 @@ class admin_functions {
                     $new_flight. ");";
                     $this->conn->link->query($insert_flight_query, MYSQLI_STORE_RESULT);
                     $insert_flight_result = $this->conn->link->affected_rows;
-                    // TODO: create seats for the flight
-                    if ($insert_flight_result != 0) {
+
+                    /** Creat Seats for this flight */
+                    $cnt = 0;
+                    $insert_seat_query = null;
+
+                    $Fnum = (int)$F_seat_number;
+                    for ($i = 1; $i <= $Fnum; $i++) {
+                        $insert_seat_query = "insert into" .config\Seat_table::NAME . " values(" .
+                            $i . "," . "F" . "," .
+                            $fprice . "," . 0 . "," . $fid . ");";
+                        $this->conn->link->query($insert_seat_query, MYSQLI_STORE_RESULT);
+                        $cnt += $this->conn->link->affected_rows;
+                    }
+
+                    $Cnum = (int)$C_seat_number;
+                    for ($i = 1 + $Fnum; $i <= $Cnum + $Fnum; $i++) {
+                        $insert_seat_query = "insert into" .config\Seat_table::NAME . " values(" .
+                            $i . "," . "C" . "," .
+                            $fprice . "," . 0 . "," . $fid . ");";
+                        echo $insert_seat_query . "<br />";
+                        $this->conn->link->query($insert_seat_query, MYSQLI_STORE_RESULT);
+                        $cnt += $this->conn->link->affected_rows;
+                    }
+
+                    $Enum = (int)($seats_total) - $C_seat_number - $F_seat_number;
+                    for ($i = 1; $i <= $Enum; $i++) {
+                        $insert_seat_query = "insert into" .config\Seat_table::NAME . " values(" .
+                            ($i + $Fnum + $Cnum) . "," . "E" . "," .
+                            $eprice . "," . 0 . "," . $fid . ");";
+                        echo $insert_seat_query . "<br />";
+                        $this->conn->link->query($insert_seat_query, MYSQLI_STORE_RESULT);
+                        $cnt += $this->conn->link->affected_rows;
+                    }
+                    /**                             */
+
+                    if ($insert_flight_result != 0 && $cnt == (int)$seats_total) {
                         $this->conn->link->commit();    // commit this transaction
                         $succeeded = true;
                         $this->conn->link->autocommit(true);
@@ -107,7 +155,7 @@ class admin_functions {
                         $this->conn->link->rollback();
                         $this->conn->link->autocommit(true);
                     }
-                }while($retry_times--);
+                }while(--$retry_times == self::RETRY_TIMES);
                 if ($retry_times == 0 && $succeeded == false) {
                     throw new admin_exception(admin_exception_codes::InsertFlightFailed);
                 }
