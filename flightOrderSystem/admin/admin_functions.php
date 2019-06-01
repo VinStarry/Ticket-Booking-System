@@ -132,7 +132,7 @@ class admin_functions {
                             $insert_seat_query = "insert into " . config\Seat_table::NAME . " values(" .
                                 $i . "," . "'F'" . "," .
                                 $fprice . "," . $fid . ");";
-                            echo $insert_seat_query . "<br />";
+//                            echo $insert_seat_query . "<br />";
                             $this->conn->link->query($insert_seat_query, MYSQLI_STORE_RESULT);
                             $cnt += $this->conn->link->affected_rows;
                         }
@@ -142,7 +142,7 @@ class admin_functions {
                             $insert_seat_query = "insert into " . config\Seat_table::NAME . " values(" .
                                 $i . "," . "'C'" . "," .
                                 $cprice . "," . $fid . ");";
-                            echo $insert_seat_query . "<br />";
+//                            echo $insert_seat_query . "<br />";
                             $this->conn->link->query($insert_seat_query, MYSQLI_STORE_RESULT);
                             $cnt += $this->conn->link->affected_rows;
                         }
@@ -152,27 +152,22 @@ class admin_functions {
                             $insert_seat_query = "insert into " . config\Seat_table::NAME . " values(" .
                                 ($i + $Fnum + $Cnum) . "," . "'E'" . "," .
                                 $eprice . "," . $fid . ");";
-                            echo $insert_seat_query . "<br />";
+//                            echo $insert_seat_query . "<br />";
                             $this->conn->link->query($insert_seat_query, MYSQLI_STORE_RESULT);
                             $cnt += $this->conn->link->affected_rows;
                         }
                         /**                             */
 
                         if ($insert_flight_result != 0 && $cnt == (int)$seats_total) {
-//                        echo "succ <br />";
                             $this->conn->link->commit();    // commit this transaction
                             $succeeded = true;
-                            $this->conn->link->autocommit(true);
                             break;
                         } else {
-//                        echo "fail <br />";
                             $this->conn->link->rollback();
-                            $this->conn->link->autocommit(true);
                         }
                     }
                     else {
                         $this->conn->link->rollback();
-                        $this->conn->link->autocommit(true);
                     }
                 }while(--$retry_times);
                 if ($retry_times == 0 && $succeeded == false) {
@@ -197,6 +192,10 @@ class admin_functions {
                            string $new_begin_date = null, string $new_end_date = null) {
         // TODO: 1
         // TODO: before implementing this, goto finish the backend of user
+    }
+
+    function alter_ticket_price($fid, $target_date, $fdis, $cdis, $edis) {
+        // TODO: 1.5
     }
 
     function delete_flight($fid) {
@@ -239,7 +238,7 @@ class admin_functions {
                 for ($t = date($begin_date); $t <= date($end_date); ) {
                     $insert_flying_date = "insert into " . config\Flying_date_table::NAME . " values(" .
                         "'". date("Y-m-d", strtotime($t)). "'," . $fid .",". $edis .",". $cdis . "," . $fdis
-                        .");";
+                        . ",0,0,0,0.00);";
 //                    echo $insert_flying_date . "<br />";
                     $this->conn->link->query($insert_flying_date, MYSQLI_STORE_RESULT);
                     $cnt += $this->conn->link->affected_rows;
