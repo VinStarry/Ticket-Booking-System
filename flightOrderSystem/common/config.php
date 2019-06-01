@@ -46,8 +46,8 @@ final class Flight_table {
     public const DURATION = "F_DURATION";       // @datatype: int
     public const DEPART_PLACE = "F_DEPARTPLACE";// @datatype: char(3)
     public const ARRIVE_PLACE = "F_ARRIVEPLACE";// @datatype: char(3)
-    public const BEGIN_SERVICE = "F_BEGIN";     // @datatype: datetime
-    public const END_SERVICE = "F_END";         // @datatype: datetime
+    public const BEGIN_SERVICE = "BEGIN_SERVICE";     // @datatype: datetime
+    public const END_SERVICE = "END_SERVICE";         // @datatype: datetime
     public const SEATS_TOTAL = "F_SEATSTOTAL";  // @datatype: int
     public const SEATS_TAKEN = "F_SEATSTAKEN";  // calculated from Seat table and Order table
                                                 // @datatype: int
