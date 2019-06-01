@@ -69,7 +69,7 @@ class decimal2P {
     }
 
     /**
-     * @return string|null Same as getMoney()
+     * @return string|null Same as showMoney()
      */
     public function __toString() {
         if ($this->money == null)
