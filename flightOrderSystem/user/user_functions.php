@@ -191,4 +191,36 @@ final class User_functions {
             throw $ex;
         }
     }
+
+    public function search_tickets(flight_User &$usr) {
+        // TODO: first
+    }
+
+    public function buy_tickets(flight_User &$usr) {
+        // TODO: 2
+    }
+
+    public function pay_for_tickets(flight_User &$usr) {
+        // TODO: 3
+    }
+
+    public function add_balance(flight_User &$usr, decimal2P $money) {
+        // TODO: 4
+    }
+
+    public function take_ticket(flight_User &$usr) {
+        // TODO: 5
+    }
+
+    public function lookup_history(flight_User &$usr) {
+        // TODO: 6
+    }
+
+    public function cancel_ticket(flight_User &$usr) {
+        // TODO: 7
+    }
+
+    public function show_data(flight_User &$usr) {
+        // TODO: 8
+    }
 }
