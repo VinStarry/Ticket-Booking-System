@@ -11,6 +11,9 @@ class admin_exception_codes {
     public const FIDAlreadyExist = 4;
     public const InsertFlightFailed = 5;
     public const InvalidSeatsParam = 6;
+    public const AddFlightDateFailed = 6;
+    public const TimeLogicError = 7;
+    public const DiscountNotNumeric = 8;
 }
 
 class admin_exception extends Exception {
@@ -33,9 +36,15 @@ class admin_exception extends Exception {
             case admin_exception_codes::FIDAlreadyExist:
                 return "This FID already exists, please check carefully.";
             case admin_exception_codes::InsertFlightFailed:
-                return "Falied too many times, probably the server is busy";
+                return "Falied too many times, probably the server is busy, or some input error occurred.";
             case admin_exception_codes::InvalidSeatsParam:
                 return "The parameter you set for seats is not in correct format";
+            case admin_exception_codes::AddFlightDateFailed:
+                return "Failed to add flight date,  probably the server is busy, or some input error occurred.";
+            case admin_exception_codes::TimeLogicError:
+                return "Begin time before begin service time or end time later than end service time";
+            case admin_exception_codes::DiscountNotNumeric:
+                return "Discount is not numeric";
             default:
                 return "Some admin exception occurred.";
         }
@@ -177,32 +186,86 @@ class admin_functions {
 
     function revise_flight($fid, string $new_type = null,
                            string $new_begin_date = null, string $new_end_date = null) {
-
+        // TODO: second
+        // TODO: finish this then goto finish the backend of user
     }
 
     function delete_flight($fid) {
-
+        // TODO: 4-2
     }
 
+    /**
+     * @param $fid              : corresponding to the flight
+     * @param string $begin_date: day begin
+     * @param string $end_date  : day end
+     * @param int $interval_days: number of days between flights
+     * @param int $edis         : economic seats' discount
+     * @param int $cdis         : commercial seats' discount
+     * @param int $fdis         : first-class seats' disconut
+     * @throws admin_exception
+     */
     function add_flying_date($fid, string $begin_date,
-                             string $end_date, int $interval_days) {
-        //TODO: first
-
+                             string $end_date, int $interval_days, int $edis, int $cdis, int $fdis) {
+        try {
+            $search_fid = "select " . config\Flight_table::ID . "," . config\Flight_table::BEGIN_SERVICE
+                .",". config\Flight_table::END_SERVICE .
+                " from " . config\Flight_table::NAME .
+                " where " . config\Flight_table::ID . " = " . $fid .";";
+            $result = $this->conn->link->query($search_fid);
+            list($rfid, $rbtime, $retime) = $result->fetch_row();
+//            echo $search_fid . "<br />";
+            if ($rfid == null) {
+                throw new admin_exception(admin_exception_codes::FIDAlreadyExist);
+            }
+            else if(strtotime($begin_date) < strtotime($rbtime) || strtotime($end_date) > strtotime($retime)) {
+                throw new admin_exception(admin_exception_codes::TimeLogicError);
+            }
+            else if(!is_numeric($edis) || !is_numeric($cdis) || !is_numeric($fdis)) {
+                throw new admin_exception(admin_exception_codes::DiscountNotNumeric);
+            }
+            $retry_times =  self::RETRY_TIMES;
+            $succeeded = false;
+            do {
+                $cnt = 0;
+                for ($t = date($begin_date); $t <= date($end_date); ) {
+                    $insert_flying_date = "insert into " . config\Flying_date_table::NAME . " values(" .
+                        "'". date("Y-m-d", strtotime($t)). "'," . $fid .",". $edis .",". $cdis . "," . $fdis
+                        .");";
+//                    echo $insert_flying_date . "<br />";
+                    $this->conn->link->query($insert_flying_date, MYSQLI_STORE_RESULT);
+                    $cnt += $this->conn->link->affected_rows;
+                    $t = date("Y-m-d", strtotime("+$interval_days day", strtotime($t)));
+                }
+                if ($cnt > 0) {
+                    $succeeded = true;
+                    break;
+                }
+            }while($retry_times--);
+            if ($retry_times == 0 && $succeeded == false) {
+                throw new admin_exception(admin_exception_codes::InsertFlightFailed);
+            }
+        }
+        catch (mysqli_sql_exception $ex) {
+            throw $ex;
+        }
+        catch (admin_exception $ex) {
+            throw $ex;
+        }
     }
 
     function delete_flying_date($fid, $cancel_date) {
-
+        // TODO: 4-1
     }
 
     function list_data() {
-
+        // TODO: 5
     }
 
     function show_revenue_by_day() {
-
+        // TODO: 6
     }
 
     function show_revenue_by_month() {
-
+        // TODO: 7
     }
 }
