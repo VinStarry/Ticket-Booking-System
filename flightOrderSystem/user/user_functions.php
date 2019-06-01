@@ -9,6 +9,7 @@ class user_exception_codes {
     public const TelTooLong = 3;
     public const InsertAcconutFailed = 4;
     public const AccountNotExist = 5;
+    public const IDInvalidFormat = 6;
 }
 
 class user_exception extends Exception {
@@ -31,6 +32,8 @@ class user_exception extends Exception {
                 return "Insert into user account table falied, This mainly happens when the Server is busy";
             case user_exception_codes::AccountNotExist:
                 return "Sorry, this Account do not exist";
+            case user_exception_codes::IDInvalidFormat:
+                return "Invalid Format! ID can only be numbers";
             default:
                 return "Some user exception occurred.";
         }
@@ -158,6 +161,9 @@ final class User_functions {
      */
     public static function login_account(mysqli &$link, string $uid, string $upsw) {
         try {
+            if (!is_numeric($uid)) {
+                throw new user_exception(user_exception_codes::IDInvalidFormat);
+            }
             $query = "select " .config\User_table::PASSWORD . "," . config\User_table::UNAME . ","
                 . config\User_table::TELEPHONE . "," .config\User_table::BALANCE .
                 " from " . config\User_table::NAME .
