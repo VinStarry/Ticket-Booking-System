@@ -28,7 +28,7 @@ class user_exception extends Exception {
             case user_exception_codes::TelTooLong:
                 return "Telephone too long.";
             case user_exception_codes::InsertAcconutFailed:
-                return "Insert into user account table falied";
+                return "Insert into user account table falied, This mainly happens when the Server is busy";
             case user_exception_codes::AccountNotExist:
                 return "Sorry, this Account do not exist";
             default:
@@ -58,6 +58,22 @@ class flight_User {
         $this->UName = $uname;
         $this->UTelephone = $utel;
         $this->UBalance = $ubalance;
+    }
+
+    /**
+     * @return string return balance
+     */
+    final public function getUBalance(): string {
+        return $this->UBalance;
+    }
+
+    /**
+     * @param string $UBalance
+     * Ubalance can only be revised through a class which inherit
+     * class flight_User
+     */
+    final protected function setUBalance(string $UBalance): void {
+        $this->UBalance = $UBalance;
     }
 
 }
@@ -113,7 +129,8 @@ final class User_functions {
                     $try_times--;
                 }while($try_times != 0);
                 if ($succeeded == false) {
-                    // Already tried 3 times but still failed
+                    // Already tried TRY_TIMES times but still failed, this is mainly because
+                    // the server is busy at the time being
                     throw new user_exception(user_exception_codes::InsertAcconutFailed);
                 }
             }
