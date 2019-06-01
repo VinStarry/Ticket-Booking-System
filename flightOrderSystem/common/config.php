@@ -49,8 +49,6 @@ final class Flight_table {
     public const BEGIN_SERVICE = "BEGIN_SERVICE";     // @datatype: datetime
     public const END_SERVICE = "END_SERVICE";         // @datatype: datetime
     public const SEATS_TOTAL = "F_SEATSTOTAL";  // @datatype: int
-    public const SEATS_TAKEN = "F_SEATSTAKEN";  // calculated from Seat table and Order table
-                                                // @datatype: int
 }
 
 final class Seat_table {
@@ -87,6 +85,10 @@ final class Flying_date_table {
     public const EDISCONUT = "f_ediscount";     // @datatype: int
     public const CDISCOUNT = "f_cdiscount";     // @datatype: int
     public const FDISCOUNT = "f_fdiscount";     // @datatype: int
+    public const ETAKEN = "e_taken";            // @datatype: int , default 0
+    public const CTAKEN = "c_taken";            // @datatype: int , default 0
+    public const FTAKEN = "f_taken";            // @datatype: int , default 0
+    public const REVENUE = "revenue";           // @datatype: decimal(11, 2) , default 0.00
 }
 
 ?>
