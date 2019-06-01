@@ -117,29 +117,30 @@ class admin_functions {
 
                     $Fnum = (int)$F_seat_number;
                     for ($i = 1; $i <= $Fnum; $i++) {
-                        $insert_seat_query = "insert into" .config\Seat_table::NAME . " values(" .
-                            $i . "," . "F" . "," .
+                        $insert_seat_query = "insert into " .config\Seat_table::NAME . " values(" .
+                            $i . "," . "'F'" . "," .
                             $fprice . "," . 0 . "," . $fid . ");";
+//                        echo $insert_seat_query . "<br />";
                         $this->conn->link->query($insert_seat_query, MYSQLI_STORE_RESULT);
                         $cnt += $this->conn->link->affected_rows;
                     }
 
                     $Cnum = (int)$C_seat_number;
                     for ($i = 1 + $Fnum; $i <= $Cnum + $Fnum; $i++) {
-                        $insert_seat_query = "insert into" .config\Seat_table::NAME . " values(" .
-                            $i . "," . "C" . "," .
+                        $insert_seat_query = "insert into " .config\Seat_table::NAME . " values(" .
+                            $i . "," . "'C'" . "," .
                             $fprice . "," . 0 . "," . $fid . ");";
-                        echo $insert_seat_query . "<br />";
+//                        echo $insert_seat_query . "<br />";
                         $this->conn->link->query($insert_seat_query, MYSQLI_STORE_RESULT);
                         $cnt += $this->conn->link->affected_rows;
                     }
 
                     $Enum = (int)($seats_total) - $C_seat_number - $F_seat_number;
                     for ($i = 1; $i <= $Enum; $i++) {
-                        $insert_seat_query = "insert into" .config\Seat_table::NAME . " values(" .
-                            ($i + $Fnum + $Cnum) . "," . "E" . "," .
+                        $insert_seat_query = "insert into " .config\Seat_table::NAME . " values(" .
+                            ($i + $Fnum + $Cnum) . "," . "'E'" . "," .
                             $eprice . "," . 0 . "," . $fid . ");";
-                        echo $insert_seat_query . "<br />";
+//                        echo $insert_seat_query . "<br />";
                         $this->conn->link->query($insert_seat_query, MYSQLI_STORE_RESULT);
                         $cnt += $this->conn->link->affected_rows;
                     }
@@ -155,7 +156,7 @@ class admin_functions {
                         $this->conn->link->rollback();
                         $this->conn->link->autocommit(true);
                     }
-                }while(--$retry_times == self::RETRY_TIMES);
+                }while(--$retry_times);
                 if ($retry_times == 0 && $succeeded == false) {
                     throw new admin_exception(admin_exception_codes::InsertFlightFailed);
                 }
