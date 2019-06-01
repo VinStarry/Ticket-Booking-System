@@ -120,46 +120,55 @@ class admin_functions {
                     $this->conn->link->query($insert_flight_query, MYSQLI_STORE_RESULT);
                     $insert_flight_result = $this->conn->link->affected_rows;
 
-                    /** Creat Seats for this flight */
-                    $cnt = 0;
-                    $insert_seat_query = null;
+//                    echo $insert_flight_result. "<br />";
+                    if ($insert_flight_result > 0) {
 
-                    $Fnum = (int)$F_seat_number;
-                    for ($i = 1; $i <= $Fnum; $i++) {
-                        $insert_seat_query = "insert into " .config\Seat_table::NAME . " values(" .
-                            $i . "," . "'F'" . "," .
-                            $fprice . "," . $fid . ");";
-//                        echo $insert_seat_query . "<br />";
-                        $this->conn->link->query($insert_seat_query, MYSQLI_STORE_RESULT);
-                        $cnt += $this->conn->link->affected_rows;
-                    }
+                        /** Creat Seats for this flight */
+                        $cnt = 0;
+                        $insert_seat_query = null;
 
-                    $Cnum = (int)$C_seat_number;
-                    for ($i = 1 + $Fnum; $i <= $Cnum + $Fnum; $i++) {
-                        $insert_seat_query = "insert into " .config\Seat_table::NAME . " values(" .
-                            $i . "," . "'C'" . "," .
-                            $fprice . "," . $fid . ");";
-//                        echo $insert_seat_query . "<br />";
-                        $this->conn->link->query($insert_seat_query, MYSQLI_STORE_RESULT);
-                        $cnt += $this->conn->link->affected_rows;
-                    }
+                        $Fnum = (int)$F_seat_number;
+                        for ($i = 1; $i <= $Fnum; $i++) {
+                            $insert_seat_query = "insert into " . config\Seat_table::NAME . " values(" .
+                                $i . "," . "'F'" . "," .
+                                $fprice . "," . $fid . ");";
+                            echo $insert_seat_query . "<br />";
+                            $this->conn->link->query($insert_seat_query, MYSQLI_STORE_RESULT);
+                            $cnt += $this->conn->link->affected_rows;
+                        }
 
-                    $Enum = (int)($seats_total) - $C_seat_number - $F_seat_number;
-                    for ($i = 1; $i <= $Enum; $i++) {
-                        $insert_seat_query = "insert into " .config\Seat_table::NAME . " values(" .
-                            ($i + $Fnum + $Cnum) . "," . "'E'" . "," .
-                            $eprice . "," . $fid . ");";
-//                        echo $insert_seat_query . "<br />";
-                        $this->conn->link->query($insert_seat_query, MYSQLI_STORE_RESULT);
-                        $cnt += $this->conn->link->affected_rows;
-                    }
-                    /**                             */
+                        $Cnum = (int)$C_seat_number;
+                        for ($i = 1 + $Fnum; $i <= $Cnum + $Fnum; $i++) {
+                            $insert_seat_query = "insert into " . config\Seat_table::NAME . " values(" .
+                                $i . "," . "'C'" . "," .
+                                $cprice . "," . $fid . ");";
+                            echo $insert_seat_query . "<br />";
+                            $this->conn->link->query($insert_seat_query, MYSQLI_STORE_RESULT);
+                            $cnt += $this->conn->link->affected_rows;
+                        }
 
-                    if ($insert_flight_result != 0 && $cnt == (int)$seats_total) {
-                        $this->conn->link->commit();    // commit this transaction
-                        $succeeded = true;
-                        $this->conn->link->autocommit(true);
-                        break;
+                        $Enum = (int)($seats_total) - $C_seat_number - $F_seat_number;
+                        for ($i = 1; $i <= $Enum; $i++) {
+                            $insert_seat_query = "insert into " . config\Seat_table::NAME . " values(" .
+                                ($i + $Fnum + $Cnum) . "," . "'E'" . "," .
+                                $eprice . "," . $fid . ");";
+                            echo $insert_seat_query . "<br />";
+                            $this->conn->link->query($insert_seat_query, MYSQLI_STORE_RESULT);
+                            $cnt += $this->conn->link->affected_rows;
+                        }
+                        /**                             */
+
+                        if ($insert_flight_result != 0 && $cnt == (int)$seats_total) {
+//                        echo "succ <br />";
+                            $this->conn->link->commit();    // commit this transaction
+                            $succeeded = true;
+                            $this->conn->link->autocommit(true);
+                            break;
+                        } else {
+//                        echo "fail <br />";
+                            $this->conn->link->rollback();
+                            $this->conn->link->autocommit(true);
+                        }
                     }
                     else {
                         $this->conn->link->rollback();
@@ -186,12 +195,12 @@ class admin_functions {
 
     function revise_flight($fid, string $new_type = null,
                            string $new_begin_date = null, string $new_end_date = null) {
-        // TODO: second
-        // TODO: finish this then goto finish the backend of user
+        // TODO: 1
+        // TODO: before implementing this, goto finish the backend of user
     }
 
     function delete_flight($fid) {
-        // TODO: 4-2
+        // TODO: 2
     }
 
     /**
@@ -254,18 +263,18 @@ class admin_functions {
     }
 
     function delete_flying_date($fid, $cancel_date) {
-        // TODO: 4-1
+        // TODO: 3
     }
 
     function list_data() {
-        // TODO: 5
+        // TODO: 4
     }
 
     function show_revenue_by_day() {
-        // TODO: 6
+        // TODO: 5
     }
 
     function show_revenue_by_month() {
-        // TODO: 7
+        // TODO: 6
     }
 }
