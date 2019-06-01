@@ -48,18 +48,9 @@ final class Flight_table {
     public const ARRIVE_PLACE = "F_ARRIVEPLACE";// @datatype: char(3)
     public const BEGIN_SERVICE = "BEGIN_SERVICE";     // @datatype: datetime
     public const END_SERVICE = "END_SERVICE";         // @datatype: datetime
-    public const SEATS_TOTAL = "F_SEATSTOTAL";  // @datatype: int
-}
-
-final class Seat_table {
-    // Seat table
-    public const NAME = "Seat_t";
-    public const ID = "S_ID";               // , part of priamry key @datatype: int
-    public const SCLASS = "S_CLASS";        // @datatype: enum('E','C','F')
-                                            // 'E' --> Economic; 'C' --> Commercial; 'F' --> First-class
-    public const PRICE = "S_PRICE";         // @datatype: decimal(8,2)
-    public const FID = "S_FID";             // foreign key from Flight table, part of priamry key
-                                            // @datatype: int
+    public const FSEAT_NUMBER = "FSEAT_NUMBER";       // @datatype: int
+    public const CSEAT_NUMBER = "CSEAT_NUMBER";       // @datatype: int
+    public const ESEAT_NUMBER = "CSEAT_NUMBER";       // @datatype: int
 }
 
 final class Ticket_table {
@@ -85,6 +76,9 @@ final class Flying_date_table {
     public const EDISCONUT = "f_ediscount";     // @datatype: int
     public const CDISCOUNT = "f_cdiscount";     // @datatype: int
     public const FDISCOUNT = "f_fdiscount";     // @datatype: int
+    public const EPRICE = "e_price";            // @datatype: decimal(8,2)
+    public const CPRICE = "c_price";            // @datatype: decimal(8,2)
+    public const FPRICE = "f_price";            // @datatype: decimal(8,2)
     public const ETAKEN = "e_taken";            // @datatype: int , default 0
     public const CTAKEN = "c_taken";            // @datatype: int , default 0
     public const FTAKEN = "f_taken";            // @datatype: int , default 0
