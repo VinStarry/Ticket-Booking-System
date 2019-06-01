@@ -2,7 +2,7 @@
 namespace config;
 
 final class DB_info {
-    public const SERVER_ADDRESS = "localhost";
+    public const SERVER_ADDRESS = "127.0.0.1";
     public const DATABASE_USER_NAME = "seller";
     public const DATABASE_USER_PSW = "123456";
     public const DATABASE_NAME = "ticket";
@@ -56,13 +56,11 @@ final class Flight_table {
 final class Seat_table {
     // Seat table
     public const NAME = "Seat_t";
-    public const ID = "S_ID";               // primary key @datatype: int
+    public const ID = "S_ID";               // , part of priamry key @datatype: int
     public const SCLASS = "S_CLASS";        // @datatype: enum('E','C','F')
                                             // 'E' --> Economic; 'C' --> Commercial; 'F' --> First-class
     public const PRICE = "S_PRICE";         // @datatype: decimal(8,2)
-    public const DISCOUNT = "S_DISCOUNT";   // @datatype: int default 100
-                                            // 88 means take a 12% discount (100% - 88% = 12%)
-    public const FID = "S_FID";             // foreign key from Flight table
+    public const FID = "S_FID";             // foreign key from Flight table, part of priamry key
                                             // @datatype: int
 }
 
@@ -79,6 +77,16 @@ final class Ticket_table {
                                                 // @datatype: int
     public const SID = "T_SID";                 // foreign key from Seat table
                                                 // @datatype: int
+}
+
+final class Flying_date_table {
+    // Flying date table
+    public const NAME = "Flying_date";
+    public const FDATE = "f_date";              // @datatype: date, part of priamry key
+    public const FID = "f_FID";                 // @datatype: int, part of priamry key
+    public const EDISCONUT = "f_ediscount";     // @datatype: int
+    public const CDISCOUNT = "f_cdiscount";     // @datatype: int
+    public const FDISCOUNT = "f_fdiscount";     // @datatype: int
 }
 
 ?>
