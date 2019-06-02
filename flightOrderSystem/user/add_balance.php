@@ -62,7 +62,7 @@ function test_input($data) {
 <div class="divForm">
     <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
         <p>
-            欢迎登陆机票预订系统
+            欢迎登陆充值系统
         </p>
         <p>
             账  户：<input type="text" name="username"/>
