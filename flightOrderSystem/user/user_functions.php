@@ -1,5 +1,7 @@
 <?php
 
+use config\User_table;
+
 include_once '../common/decimal2P.php';
 
 /**
@@ -16,6 +18,7 @@ class user_exception_codes {
     public const SrcPlaceNotExist = 7;
     public const DstPlaceNotExist = 8;
     public const NoTargetFlight = 9;
+    public const ServerBusy = 10;
 }
 
 class user_exception extends Exception {
@@ -48,6 +51,8 @@ class user_exception extends Exception {
                 return "There are no flight coming to the city you search";
             case user_exception_codes::NoTargetFlight:
                 return "No flight satisfy all the conditions";
+            case user_exception_codes::ServerBusy:
+                return "Operation failed, probably the server is busy, please contact the admin";
             default:
                 return "Some user exception occurred.";
         }
@@ -292,7 +297,7 @@ final class User_functions {
         }
     }
 
-    public function buy_tickets(mysqli &$link, flight_User &$usr) {
+    public function order_tickets(flight_User &$usr) {
         // TODO: 2
     }
 
@@ -300,8 +305,54 @@ final class User_functions {
         // TODO: 3
     }
 
-    public function add_balance(mysqli &$link, flight_User &$usr, decimal2P $money) {
-        // TODO: 4
+    /**
+     * add balance to account
+     * @param mysqli $link
+     * @param flight_User $usr
+     * @param string $money     the money add to the account
+     * @throws user_exception
+     * Generate a new decimal2P object for money
+     */
+    public static function add_balance(mysqli &$link, flight_User &$usr, string $money) {
+        // in UI, it needs user to choose, 100.00, 500.00, 1000.00, 5000.00
+        try {
+            $link->autocommit(false);
+            $add_money = new decimal2P($money);
+            $query = "update ". config\User_table::NAME .
+                     " set " . config\User_table::BALANCE ."=" .  config\User_table::BALANCE ."+" .$add_money.
+                     " where " . config\User_table::ID. "=". $usr->UID  .";";
+
+            $try_times = self::RETRY_TIMES;
+            $succeed = false;
+
+            do {
+                $link->query($query, MYSQLI_STORE_RESULT);
+                if ($link->affected_rows > 0) {
+                    $succeed = true;
+                    $link->commit();
+                    break;
+                }
+                else {
+                    $link->rollback();
+                }
+            }while($try_times--);
+
+            if ($try_times == 0 && $succeed == false) {
+                throw new user_exception(user_exception_codes::ServerBusy);
+            }
+        }
+        catch (mysqli_sql_exception $ex) {
+            throw $ex;
+        }
+        catch (user_exception $ex) {
+            throw $ex;
+        }
+        catch (Exception $ex) {
+            throw $ex;
+        }
+        finally {
+            $link->autocommit(true);
+        }
     }
 
     public function take_ticket(mysqli &$link, flight_User &$usr) {
