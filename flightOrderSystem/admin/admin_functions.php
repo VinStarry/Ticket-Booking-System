@@ -138,16 +138,6 @@ class admin_functions {
         }
     }
 
-    function revise_flight($fid, string $new_type = null,
-                           string $new_begin_date = null, string $new_end_date = null) {
-        // TODO: 1
-        // TODO: before implementing this, goto finish the backend of user
-    }
-
-    function alter_ticket_price($fid, $target_date, $fdis, $cdis, $edis) {
-        // TODO: 1.5
-    }
-
     function delete_flight($fid) {
         // TODO: 2
     }
