@@ -24,8 +24,11 @@ class user_exception_codes {
     public const TooLatetoDo = 11;
     public const AlreadyCanceled = 12;
     public const AlreadyPaid = 13;
-    public const NotEnoughBalance = 14;
-    public const CouldNotFindOrder = 15;
+    public const AlreadyGot = 14;
+    public const NotEnoughBalance = 15;
+    public const CouldNotFindOrder = 16;
+    public const HaventPaid = 17;
+    public const TooEarly = 18;
 }
 
 class user_exception extends Exception {
@@ -66,10 +69,16 @@ class user_exception extends Exception {
                 return "It is already canceled";
             case user_exception_codes::AlreadyPaid:
                 return "It is already paid";
+            case user_exception_codes::AlreadyGot:
+                return "The ticket is already got";
             case user_exception_codes::NotEnoughBalance:
                 return "Sorry, you don't enough balance to pay for the order";
             case user_exception_codes::CouldNotFindOrder:
                 return "Sorry, could not find the order";
+            case user_exception_codes::HaventPaid:
+                return "Sorry, you haven't paid for the ticket";
+            case user_exception_codes::TooEarly:
+                return "To early to do this";
             default:
                 return "Some user exception occurred.";
         }
@@ -568,10 +577,76 @@ final class User_functions {
         }
     }
 
-    public static function take_ticket(mysqli &$link, flight_User &$usr) {
-        // TODO: 5
+    /**
+     * Take ticket based on a specific tid
+     * @param mysqli $link
+     * @param flight_User $usr
+     * @param $tid
+     * @throws user_exception
+     */
+    public static function take_ticket(mysqli &$link, flight_User &$usr, $tid) {
         try {
+            $try_times = self::RETRY_TIMES;
+            $succeeded = false;
+            do {
+                $tic_search = "select " .
+                    config\Ticket_table::OID . "," . config\Ticket_table::CANCELED . "," .
+                    config\Ticket_table::GOT_TIME . "," . config\Ticket_table::TOOKOFF_TIME .
+                    " from " . config\Ticket_table::NAME . " where " . config\Ticket_table::ID . " = " . $tid . ";";
 
+                $tic_result = $link->query($tic_search);
+
+                while (list($oid, $canceled, $gott, $offt) = $tic_result->fetch_row()) {
+//                    echo "$oid, $canceled, $gott, $offt <br />";
+                    if ((bool)$canceled == true) {
+                        throw new user_exception(user_exception_codes::AlreadyCanceled);
+                    }
+                    else if ($gott != null) {
+                        throw new user_exception(user_exception_codes::AlreadyGot);
+                    }
+                    else {
+                        $cur_t_plus_24h = strtotime("+24 hour", strtotime(config\BJ_time::get_current_datetime()));
+                        if (strtotime($offt) > $cur_t_plus_24h) {
+                            throw new user_exception(user_exception_codes::TooEarly);
+                        }
+                        else {
+                            $order_search = "select ".config\Order_table::PAID.
+                                " from ".config\Order_table::NAME." where ".config\Order_table::ID." = ".$oid.";";
+//                            echo "$order_search <br />";
+                            $result = $link->query($order_search);
+
+                            list($paid) = $result->fetch_row();
+                            if ($paid != null && (bool)$paid == true) {
+                                // update ticket table
+                                $link->autocommit(false);
+                                $ctime = config\BJ_time::get_current_datetime();
+                                $update_query = "update ".config\Ticket_table::NAME.
+                                    " set ".config\Ticket_table::GOT_TIME." = '$ctime' where ".
+                                    config\Ticket_table::ID." = ".$tid.";";
+
+                                $link->query($update_query, MYSQLI_STORE_RESULT);
+
+                                if ($link->affected_rows == 1) {
+                                    $link->commit();
+                                    $link->autocommit(true);
+                                    return;
+                                }
+                                else {
+                                    $link->rollback();
+                                }
+                            }
+                            else {
+                                throw new user_exception(user_exception_codes::HaventPaid);
+                            }
+                        }
+                    }
+                }
+
+            }while($try_times--);
+            if ($try_times == 0 && !$succeeded) {
+                $link->rollback();
+                throw new user_exception(user_exception_codes::ServerBusy);
+            }
         }
         catch (mysqli_sql_exception $ex) {
             throw $ex;
