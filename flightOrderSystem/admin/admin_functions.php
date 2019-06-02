@@ -138,10 +138,6 @@ class admin_functions {
         }
     }
 
-    function delete_flight($fid) {
-        // TODO: 2
-    }
-
     /**
      * @param $fid              : corresponding to the flight
      * @param string $begin_date: day begin
