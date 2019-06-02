@@ -1,15 +1,21 @@
 <?php
 
+include_once '../common/decimal2P.php';
+
 /**
  * Class user_exception_codes shows the exception codes for user_exception
  */
 class user_exception_codes {
+    public const InvalidInput = 0;
     public const NameTooLong = 1;
     public const PswTooLong = 2;
     public const TelTooLong = 3;
     public const InsertAcconutFailed = 4;
     public const AccountNotExist = 5;
     public const IDInvalidFormat = 6;
+    public const SrcPlaceNotExist = 7;
+    public const DstPlaceNotExist = 8;
+    public const NoTargetFlight = 9;
 }
 
 class user_exception extends Exception {
@@ -22,6 +28,8 @@ class user_exception extends Exception {
 
     public function __toString() {
         switch ($this->code) {
+            case user_exception_codes::InvalidInput:
+                return "Invalid input";
             case user_exception_codes::NameTooLong:
                 return "Name too long.";
             case user_exception_codes::PswTooLong:
@@ -34,6 +42,12 @@ class user_exception extends Exception {
                 return "Sorry, this Account do not exist";
             case user_exception_codes::IDInvalidFormat:
                 return "Invalid Format! ID can only be numbers";
+            case user_exception_codes::SrcPlaceNotExist:
+                return "There are no flight coming from the city you search";
+            case user_exception_codes::DstPlaceNotExist:
+                return "There are no flight coming to the city you search";
+            case user_exception_codes::NoTargetFlight:
+                return "No flight satisfy all the conditions";
             default:
                 return "Some user exception occurred.";
         }
@@ -192,35 +206,117 @@ final class User_functions {
         }
     }
 
-    public function search_tickets(flight_User &$usr) {
-        // TODO: first
+    /**
+     * this function is for user to search Tickets
+     * @param string $target_date
+     * @param string $from_place
+     * @param string $to_place
+     * @throws user_exception
+     */
+    public static function search_tickets(string $target_date,
+                                   string $from_place, string $to_place) {
+        try {
+            $conn = new DBConnector();
+            $src_arr = $conn->get_airport_and_code_from_city($from_place);
+            $dst_arr = $conn->get_airport_and_code_from_city($to_place);
+
+            if (count($src_arr) == 0) {
+                throw new user_exception(user_exception_codes::SrcPlaceNotExist);
+            }
+            else if(count($dst_arr) == 0) {
+                throw new user_exception(user_exception_codes::DstPlaceNotExist);
+            }
+            else if ($target_date == null) {
+                throw new user_exception(user_exception_codes::InvalidInput);
+            }
+
+            $ret = array();
+            for ($i = 0; $i < count($src_arr); $i++) {
+                for ($j = 0; $j < count($dst_arr); $j++) {
+                    $flight_query = "select " . config\Flight_table::ID . "," . config\Flight_table::TYPE . "," .
+                                config\Flight_table::DEPART_TIME . "," . config\Flight_table::DURATION . "," .
+                                config\Flight_table::FSEAT_NUMBER . "," . config\Flight_table::CSEAT_NUMBER . "," .
+                                config\Flight_table::ESEAT_NUMBER .
+                        " from " . config\Flight_table::NAME .
+                        " where " .config\Flight_table::DEPART_PLACE . "=" . "'" . $src_arr[$i][0] . "'" .
+                                " and " . config\Flight_table::ARRIVE_PLACE . "=" . "'" . $dst_arr[$j][0] . "';";
+
+                    $result = $conn->link->query($flight_query);
+
+                    while (list($fid, $ftype, $fdptime, $fduration, $ffn, $fcn, $fen) = $result->fetch_row()) {
+                        $spec_query = "select " . config\Flying_date_table::EDISCOUNT . "," .
+                            config\Flying_date_table::CDISCOUNT . "," . config\Flying_date_table::FDISCOUNT . ",".
+                            config\Flying_date_table::EPRICE . "," . config\Flying_date_table::CPRICE . "," .
+                            config\Flying_date_table::FPRICE . "," . config\Flying_date_table::ETAKEN . "," .
+                            config\Flying_date_table::CTAKEN . "," . config\Flying_date_table::FTAKEN .
+                            " from " .config\Flying_date_table::NAME .
+                            " where " .config\Flying_date_table::FID . "=" . $fid .
+                                    " and " . config\Flying_date_table::FDATE . "=" . "'" . $target_date . "';";
+
+                        $tar = $conn->link->query($spec_query);
+                        if (list($edis, $cdis, $fdis, $ep, $cp, $fp, $et, $ct, $ft) = $tar->fetch_row()) {
+                            $e_final_price = new decimal2P((string)$ep);
+                            $e_final_price->multiply_discount($edis);
+                            $c_final_price = new decimal2P($cp);
+                            $c_final_price->multiply_discount($cdis);
+                            $f_final_price = new decimal2P($fp);
+                            $f_final_price->multiply_discount($fdis);
+                            $eleft = (int)$et < (int)$fen ? "Y" : "N";
+                            $cleft = (int)$ct < (int)$fcn ? "Y" : "N";
+                            $fleft = (int)$ft < (int)$ffn ? "Y" : "N";
+                            $fartime = date("H:i:s",strtotime("+$fduration min",strtotime($fdptime)));
+                            $src_airport = $src_arr[$i][1];
+                            $dst_airport = $dst_arr[$j][1];
+                            $temp = array($fid, $ftype, $src_airport, $dst_airport, $target_date, $fdptime, $fartime,
+                                $e_final_price, $c_final_price, $f_final_price, $eleft, $cleft, $fleft);
+                            $ret[] = $temp;
+                            $tar->free();
+                        }
+                    }
+
+                    $result->free();
+                }
+            }
+            if (count($ret) == 0) {
+                throw new user_exception(user_exception_codes::NoTargetFlight);
+            }
+        }
+        catch (mysqli_sql_exception $ex) {
+            throw $ex;
+        }
+        catch (user_exception $ex) {
+            throw $ex;
+        }
+        catch (Exception $ex) {
+            throw $ex;
+        }
     }
 
-    public function buy_tickets(flight_User &$usr) {
+    public function buy_tickets(mysqli &$link, flight_User &$usr) {
         // TODO: 2
     }
 
-    public function pay_for_tickets(flight_User &$usr) {
+    public function pay_for_tickets(mysqli &$link, flight_User &$usr) {
         // TODO: 3
     }
 
-    public function add_balance(flight_User &$usr, decimal2P $money) {
+    public function add_balance(mysqli &$link, flight_User &$usr, decimal2P $money) {
         // TODO: 4
     }
 
-    public function take_ticket(flight_User &$usr) {
+    public function take_ticket(mysqli &$link, flight_User &$usr) {
         // TODO: 5
     }
 
-    public function lookup_history(flight_User &$usr) {
+    public function lookup_history(mysqli &$link, flight_User &$usr) {
         // TODO: 6
     }
 
-    public function cancel_ticket(flight_User &$usr) {
+    public function cancel_ticket(mysqli &$link, flight_User &$usr) {
         // TODO: 7
     }
 
-    public function show_data(flight_User &$usr) {
+    public function show_data(mysqli &$link, flight_User &$usr) {
         // TODO: 8
     }
 }
