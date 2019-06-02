@@ -1,1 +1,4 @@
 /.idea/
+*/output.txt
+*/*.log
+**/test.php

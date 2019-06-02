@@ -29,6 +29,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!strcmp($login, "登录")) {
         try {
             $user = User_functions::login_account($conn->link, (int)$username, $password);
+            if (!is_numeric($username)) {
+                echo "<script language=javascript>alert('账户必须是全数字!');</script>";
+            }
             if ($user == null) {
                 echo "<script language=javascript>alert('密码错误!');</script>";
             }
@@ -52,8 +55,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-function test_input($data)
-{
+function test_input($data) {
     $data = trim($data);
     $data = stripslashes($data);
     $data = htmlspecialchars($data);

@@ -242,6 +242,7 @@ final class User_functions {
                 . config\User_table::TELEPHONE . "," .config\User_table::BALANCE .
                 " from " . config\User_table::NAME .
                 " where " . config\User_table::ID . " = " . $uid . ";";
+
             $result = $link->query($query);
             list($expect_psw, $uname, $utelephone, $ubalance) = $result->fetch_row();
             $result->free();
@@ -343,6 +344,7 @@ final class User_functions {
             if (count($ret) == 0) {
                 throw new user_exception(user_exception_codes::NoTargetFlight);
             }
+            return $ret;
         }
         catch (mysqli_sql_exception $ex) {
             throw $ex;

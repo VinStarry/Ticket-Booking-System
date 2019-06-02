@@ -2,6 +2,7 @@
 
 include_once 'config.php';
 
+use config\Code_CITY;
 use config\DB_info as INFO;
 
 class DBException extends Exception {
@@ -100,19 +101,31 @@ class DBConnector {
      * @example: input --> PVG
      *          output --> 上海
      */
-    function get_city_from_code(string $code) {
+    function get_city_from_code(string $code, bool $full_code_table = false) {
         try {
-            $query = "select " . config\Code_CITY::CITY .
+            $query = $full_code_table ? "select ".config\Code_CITY::CITY." from ".config\Code_CITY::NAME.";"
+                : "select " . config\Code_CITY::CITY .
                 " from " . config\Code_CITY::NAME .
                 " where " . config\Code_CITY::CODE . " = \"" . $code . "\";";
-                    $result = $this->link->query($query);
-            if(list($city) = $result->fetch_row()) {
-                $result->free();
-                return $city;
+            $result = $this->link->query($query);
+
+            if (!$full_code_table) {
+                if(list($city) = $result->fetch_row()) {
+                    $result->free();
+                    return $city;
+                }
+                else {
+                    $result->free();
+                    return null;
+                }
             }
             else {
+                $ret = array();
+                while(list($city) = $result->fetch_row()) {
+                    $ret[] = $city;
+                }
                 $result->free();
-                return null;
+                return $ret;
             }
         }
         catch (mysqli_sql_exception $ex) {

@@ -12,7 +12,8 @@
         margin-left: -150px;
     }
 </style>
-
+<html>
+<body>
 <?php
 include_once '../common/config.php';
 include_once '../common/DBConnector.php';
@@ -43,8 +44,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-function test_input($data)
-{
+function test_input($data) {
     $data = trim($data);
     $data = stripslashes($data);
     $data = htmlspecialchars($data);
