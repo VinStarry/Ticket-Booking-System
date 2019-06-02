@@ -1,5 +1,7 @@
 <?php
 
+use config\Order_table;
+use config\Ticket_table;
 use config\User_table;
 
 include_once '../common/decimal2P.php';
@@ -20,6 +22,10 @@ class user_exception_codes {
     public const NoTargetFlight = 9;
     public const ServerBusy = 10;
     public const TooLatetoDo = 11;
+    public const AlreadyCanceled = 12;
+    public const AlreadyPaid = 13;
+    public const NotEnoughBalance = 14;
+    public const CouldNotFindOrder = 15;
 }
 
 class user_exception extends Exception {
@@ -56,6 +62,14 @@ class user_exception extends Exception {
                 return "Operation failed, probably the server is busy, please contact the admin";
             case user_exception_codes::TooLatetoDo:
                 return "It it too late";
+            case user_exception_codes::AlreadyCanceled:
+                return "It is already canceled";
+            case user_exception_codes::AlreadyPaid:
+                return "It is already paid";
+            case user_exception_codes::NotEnoughBalance:
+                return "Sorry, you don't enough balance to pay for the order";
+            case user_exception_codes::CouldNotFindOrder:
+                return "Sorry, could not find the order";
             default:
                 return "Some user exception occurred.";
         }
@@ -90,6 +104,30 @@ class flight_User {
      */
     final public function getUBalance(): string {
         return $this->UBalance;
+    }
+
+    /**
+     * @param string $money
+     * @example input 500, Ubalance = 5000
+     *          after this function Ubalance = 5500
+     */
+    final public function incBalance(string $money): void {
+        $nowbalance = new decimal2P($this->UBalance);
+        $bm = new decimal2P($money);
+        $nowbalance->plus($bm);
+        $this->UBalance = $nowbalance->showMoney();
+    }
+
+    /**
+     * @param string $money
+     * @example input 500, Ubalance = 5000
+     *          after this function Ubalance = 4500
+     */
+    final public function decBalance(string $money): void {
+        $nowbalance = new decimal2P($this->UBalance);
+        $bm = new decimal2P($money);
+        $nowbalance->minus($bm);
+        $this->UBalance = $nowbalance->showMoney();
     }
 
     /**
@@ -384,10 +422,84 @@ final class User_functions {
         }
     }
 
+    /**
+     * buy a ticket for the specific user
+     * @param mysqli $link
+     * @param flight_User $usr
+     * @param $oid
+     * @throws user_exception
+     */
     public static function pay_for_orders(mysqli &$link, flight_User &$usr, $oid) {
-        // TODO: 3
         try {
-//            $select_order = "select " . config\
+            $select_order = "select ".config\Ticket_table::CANCELED . "," .
+                config\Ticket_table::TOOKOFF_TIME .
+                " from " . config\Ticket_table::NAME .
+                " where " . config\Ticket_table::OID . "=" . $oid . ";";
+            $result_rows = $link->query($select_order);
+
+            $satisfied = true;
+            while (list($canceled, $offtime) = $result_rows->fetch_row()) {
+                if ((bool)$canceled == true) {
+                    throw new user_exception(user_exception_codes::AlreadyCanceled);
+                }
+                else if (strtotime(config\BJ_time::get_current_datetime()) > strtotime($offtime)) {
+                    $satisfied = false;
+                }
+            }
+
+            $result_rows->free();
+
+            if (!$satisfied) {
+                throw new user_exception(user_exception_codes::TooLatetoDo);
+            }
+            else {
+                $select_order = "select " .config\Order_table::PAID . "," .
+                    config\Order_table::COST . " from " . config\Order_table::NAME .
+                    " where " . config\Order_table::ID . " = " . $oid . ";";
+
+                $result_rows = $link->query($select_order);
+
+                if (list($paid, $cost) = $result_rows->fetch_row()) {
+                    if ((bool)$paid == true) {
+                        throw new user_exception(user_exception_codes::AlreadyPaid);
+                    }
+                    $cost2p = new decimal2P($cost);
+                    $ublance = new decimal2P($usr->getUBalance());
+                    if($ublance->compare($cost2p) == false) {
+                        throw new user_exception(user_exception_codes::NotEnoughBalance);
+                    }
+                    else {
+                        $link->autocommit(false);
+                        $update_query = "update " . config\Order_table::NAME .
+                            " set " . config\Order_table::PAID . " = true" .
+                            " where " . config\Order_table::ID . " = " . $oid . ";";
+                        $link->query($update_query, MYSQLI_STORE_RESULT);
+                        if ($link->affected_rows > 0) {
+                            $usr->decBalance($cost);
+                            $update_query = "update " . config\User_table::NAME .
+                                " set " . config\User_table::BALANCE . " = " .$usr->getUBalance() .
+                                " where " . config\User_table::ID . " = " . $usr->UID . ";";
+                            $link->query($update_query, MYSQLI_STORE_RESULT);
+                            if ($link->affected_rows > 0) {
+                                $link->commit();
+                            }
+                            else {
+                                $usr->incBalance($cost);
+                                $link->rollback();
+                                throw new user_exception(user_exception_codes::ServerBusy);
+                            }
+                        }
+                        else {
+                            $link->rollback();
+                            throw new user_exception(user_exception_codes::ServerBusy);
+                        }
+                    }
+                }
+                else {
+                    throw new user_exception(user_exception_codes::CouldNotFindOrder);
+                }
+            }
+
         }
         catch (mysqli_sql_exception $ex) {
             throw $ex;
@@ -395,7 +507,7 @@ final class User_functions {
         catch (user_exception $ex) {
             throw $ex;
         }
-        catch (user_exception $ex) {
+        catch (Exception $ex) {
             throw $ex;
         }
         finally {
@@ -438,6 +550,9 @@ final class User_functions {
             if ($try_times == 0 && $succeed == false) {
                 throw new user_exception(user_exception_codes::ServerBusy);
             }
+            else {
+                $usr->incBalance($money);
+            }
         }
         catch (mysqli_sql_exception $ex) {
             throw $ex;
@@ -464,7 +579,7 @@ final class User_functions {
         catch (user_exception $ex) {
             throw $ex;
         }
-        catch (user_exception $ex) {
+        catch (Exception $ex) {
             throw $ex;
         }
         finally {
@@ -487,7 +602,7 @@ final class User_functions {
         catch (user_exception $ex) {
             throw $ex;
         }
-        catch (user_exception $ex) {
+        catch (Exception $ex) {
             throw $ex;
         }
         finally {
@@ -506,7 +621,7 @@ final class User_functions {
         catch (user_exception $ex) {
             throw $ex;
         }
-        catch (user_exception $ex) {
+        catch (Exception $ex) {
             throw $ex;
         }
         finally {
