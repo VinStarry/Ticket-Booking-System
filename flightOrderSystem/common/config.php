@@ -42,10 +42,10 @@ final class Flight_table {
     public const NAME = "Flight_t";
     public const ID = "F_ID";                   // primary key, @datatype: int
     public const TYPE = "F_TYPE";               // @datatype: char(10)
-    public const DEPART_TIME = "F_DEPARTTIME";  // @datatype: time
-    public const DURATION = "F_DURATION";       // @datatype: int
-    public const DEPART_PLACE = "F_DEPARTPLACE";// @datatype: char(3)
-    public const ARRIVE_PLACE = "F_ARRIVEPLACE";// @datatype: char(3)
+    public const DEPART_TIME = "DEPART_TIME";  // @datatype: time
+    public const DURATION = "DURATION";       // @datatype: int
+    public const DEPART_PLACE = "DEPART_PLACE";// @datatype: char(3)
+    public const ARRIVE_PLACE = "ARRIVE_PLACE";// @datatype: char(3)
     public const BEGIN_SERVICE = "BEGIN_SERVICE";     // @datatype: datetime
     public const END_SERVICE = "END_SERVICE";         // @datatype: datetime
     public const FSEAT_NUMBER = "FSEAT_NUMBER";       // @datatype: int
