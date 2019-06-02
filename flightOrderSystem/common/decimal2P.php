@@ -41,6 +41,15 @@ class decimal2P {
         $this->money = $int_part * 100 + $frac_part;
     }
 
+    public function compare(decimal2P $b) {
+        return ($this->money - $b->getMoney()) >= 0;
+    }
+
+    public function compare_str(string $b) {
+        $bm = new decimal2P($b);
+        return $this->compare($bm);
+    }
+
     public function plus(decimal2P $b) {
         $this->money += $b->getMoney();
     }
