@@ -19,6 +19,7 @@ class user_exception_codes {
     public const DstPlaceNotExist = 8;
     public const NoTargetFlight = 9;
     public const ServerBusy = 10;
+    public const TooLatetoDo = 11;
 }
 
 class user_exception extends Exception {
@@ -53,6 +54,8 @@ class user_exception extends Exception {
                 return "No flight satisfy all the conditions";
             case user_exception_codes::ServerBusy:
                 return "Operation failed, probably the server is busy, please contact the admin";
+            case user_exception_codes::TooLatetoDo:
+                return "It it too late";
             default:
                 return "Some user exception occurred.";
         }
@@ -234,6 +237,9 @@ final class User_functions {
             else if ($target_date == null) {
                 throw new user_exception(user_exception_codes::InvalidInput);
             }
+            else if (strtotime(config\BJ_time::get_current_date()) > strtotime($target_date)) {
+                throw new user_exception(user_exception_codes::TooLatetoDo);
+            }
 
             $ret = array();
             for ($i = 0; $i < count($src_arr); $i++) {
@@ -322,6 +328,12 @@ final class User_functions {
                 $oid_result = $link->query($oid_query);
                 $cur_time = config\BJ_time::get_current_datetime();
 
+                // if you order the ticket within 3 hours before the flight, you are not allowed
+                // to order this ticket
+                if (strtotime(config\BJ_time::get_limited_datetime()) > strtotime($offtime)) {
+                    throw new user_exception(user_exception_codes::TooLatetoDo);
+                }
+
                 list($oid) = $oid_result->fetch_row();
                 $oid = ($oid == null) ? 90001 : $oid;
                 $insert_order = "insert into " . config\Order_table::NAME . " values(" .
@@ -372,8 +384,23 @@ final class User_functions {
         }
     }
 
-    public function pay_for_tickets(mysqli &$link, flight_User &$usr) {
+    public static function pay_for_orders(mysqli &$link, flight_User &$usr, $oid) {
         // TODO: 3
+        try {
+//            $select_order = "select " . config\
+        }
+        catch (mysqli_sql_exception $ex) {
+            throw $ex;
+        }
+        catch (user_exception $ex) {
+            throw $ex;
+        }
+        catch (user_exception $ex) {
+            throw $ex;
+        }
+        finally {
+            $link->autocommit(true);
+        }
     }
 
     /**
@@ -426,8 +453,23 @@ final class User_functions {
         }
     }
 
-    public function take_ticket(mysqli &$link, flight_User &$usr) {
+    public static function take_ticket(mysqli &$link, flight_User &$usr) {
         // TODO: 5
+        try {
+
+        }
+        catch (mysqli_sql_exception $ex) {
+            throw $ex;
+        }
+        catch (user_exception $ex) {
+            throw $ex;
+        }
+        catch (user_exception $ex) {
+            throw $ex;
+        }
+        finally {
+            $link->autocommit(true);
+        }
     }
 
     public function lookup_history(mysqli &$link, flight_User &$usr) {
@@ -436,9 +478,39 @@ final class User_functions {
 
     public function cancel_ticket(mysqli &$link, flight_User &$usr) {
         // TODO: 7
+        try {
+
+        }
+        catch (mysqli_sql_exception $ex) {
+            throw $ex;
+        }
+        catch (user_exception $ex) {
+            throw $ex;
+        }
+        catch (user_exception $ex) {
+            throw $ex;
+        }
+        finally {
+            $link->autocommit(true);
+        }
     }
 
     public function show_data(mysqli &$link, flight_User &$usr) {
         // TODO: 8
+        try {
+
+        }
+        catch (mysqli_sql_exception $ex) {
+            throw $ex;
+        }
+        catch (user_exception $ex) {
+            throw $ex;
+        }
+        catch (user_exception $ex) {
+            throw $ex;
+        }
+        finally {
+            $link->autocommit(true);
+        }
     }
 }
