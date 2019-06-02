@@ -73,7 +73,7 @@ final class Flying_date_table {
     public const NAME = "Flying_date";
     public const FDATE = "f_date";              // @datatype: date, part of priamry key
     public const FID = "f_FID";                 // @datatype: int, part of priamry key
-    public const EDISCONUT = "f_ediscount";     // @datatype: int
+    public const EDISCOUNT = "f_ediscount";     // @datatype: int
     public const CDISCOUNT = "f_cdiscount";     // @datatype: int
     public const FDISCOUNT = "f_fdiscount";     // @datatype: int
     public const EPRICE = "e_price";            // @datatype: decimal(8,2)
