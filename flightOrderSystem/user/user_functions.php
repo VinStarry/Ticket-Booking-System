@@ -191,7 +191,7 @@ final class User_functions {
                     list($maxid) = $result->fetch_row();
                     $id = ($maxid == null) ? 60001 : $maxid + 1;
                     $insert_account = "insert into " . config\User_table::NAME .
-                        " values(" . "$id,'$psw','$name','$tel'" . ");";
+                        " values(" . "$id,'$psw','$name','$tel'" . ",5000.00);";
                     $link->query($insert_account, MYSQLI_STORE_RESULT);
                     if ($link->affected_rows != 0) {
                         $link->commit();    // commit this transaction
@@ -203,13 +203,13 @@ final class User_functions {
                         $link->rollback();
                         $link->autocommit(true);
                     }
-                    $retry_times--;
-                }while($retry_times != 0);
+                }while($retry_times--);
                 if ($succeeded == false) {
                     // Already tried TRY_TIMES times but still failed, this is mainly because
                     // the server is busy at the time being
                     throw new user_exception(user_exception_codes::InsertAcconutFailed);
                 }
+                return $succeeded ? $id : -1;
             }
             catch (mysqli_sql_exception $ex) {
                 echo $ex->getMessage();
