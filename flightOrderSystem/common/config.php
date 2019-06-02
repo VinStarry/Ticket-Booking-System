@@ -76,12 +76,12 @@ final class Ticket_table {
     public const OID = "T_OID";                 // foreign key from Order table
                                                 // @datatype: int
     public const CANCELED = "T_CANCELED";       // @datatype: boolean
-    public const TOOKOFF_TIME = "T_TOKEOFFTIME";// @datatype: datetime
     public const GOT_TIME = "T_GOTTIME";        // @datatype: datetime
+    public const TOOKOFF_TIME = "T_TOKEOFFTIME";// @datatype: datetime
     public const FID = "T_FID";                 // foreign key from Flight table
                                                 // @datatype: int
-    public const SID = "T_SID";                 // foreign key from Seat table
-                                                // @datatype: int
+    public const SEATCLAS = "T_SEATCLASS";      // @datatype: enum('F', 'C', 'E')
+    public const PRICE = "T_PRICE";             // @datatype: decimal(8,2)
 }
 
 final class Flying_date_table {
