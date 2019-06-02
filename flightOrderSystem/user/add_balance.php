@@ -22,34 +22,21 @@ $username = $password = $signup = $login = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = test_input($_POST["username"]);
-    $fid = test_input($_POST["fid"]);
     $order_button = test_input($_POST["order_button"]);
-    $in_date = test_input($_POST["in_date"]);
-    $seatclass = (string)test_input($_POST["q"]);
+    $password = test_input($_POST["password"]);
+    $balance = (string)test_input($_POST["q"]);
     $conn = new DBConnector(false);
-//    echo "$username, $fid, $order_button, $seatclass, $in_date";
-    if (!strcmp($order_button, "预订")) {
+//    echo "$username, $order_button, $balance";
+    if (!strcmp($order_button, "充值")) {
         try {
             $user = User_functions::login_account($conn->link, (int)$username, $password);
             if (!is_numeric($username)) {
                 echo "<script language=javascript>alert('账户必须是全数字!');</script>";
             }
-            if (!is_numeric($fid)) {
-                echo "<script language=javascript>alert('飞机编号必须是全数字!');</script>";
-            }
             else {
-                $offtime = User_functions::get_flying_time($conn->link, $fid);
-                if ($offtime == null) {
-                    echo "<script language=javascript>alert('不存在这个飞机编号!');</script>";
-                }
-                else {
-                    $offdatetime = $in_date." ".$offtime;
-                    if (User_functions::order_tickets($conn->link, $username, $fid, $seatclass, $offdatetime)) {
-                        echo "<script language=javascript>alert('订票成功!');</script>";
-                    }
-                    else {
-                        echo "<script language=javascript>alert('订票失败!');</script>";
-                    }
+                $usr = User_functions::login_account($conn->link, $username, $password);
+                if (User_functions::add_balance($conn->link, $usr, $balance)) {
+                    echo "<script language=javascript>alert('充值' + $balance + '成功');</script>";
                 }
             }
         }
@@ -81,17 +68,17 @@ function test_input($data) {
             账  户：<input type="text" name="username"/>
         </p>
         <p>
-            飞机编号：<input type="text" name="fid"/>
+            密  码：<input type="password" name="password"/>
         </p>
         <p>
-            座位类型: <input type="radio" name="q" value="E" />E
-                     <input type="radio" name="q" value="C" />C
-                     <input type="radio" name="q" value="F" />F
+            充值金额: <input type="radio" name="q" value="1000.00" />1000.00
+            <input type="radio" name="q" value="2000.00" />2000.00
+            <p>
+            <input type="radio" name="q" value="5000.00" />5000.00
+            <input type="radio" name="q" value="10000.00" />10000.00
+            </p>
         </p>
-        <p>
-            出发时间：<input type="date" name="in_date"/>
-        </p>
-        <input name="order_button" type="submit" value="预订"/>
+        <input name="order_button" type="submit" value="充值"/>
     </form>
 </body>
 </div>

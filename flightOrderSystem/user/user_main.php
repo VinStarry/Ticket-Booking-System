@@ -225,13 +225,9 @@ function test_input($data) {
                                 <th><input type=\"radio\" name=\"q\" value=\"C\" />C</th>
                                 <th><input type=\"radio\" name=\"q\" value=\"F\" />F</th>";
                             echo "</tr>";
-
-//                            list($fid, $ftype, $src_airport, $dst_airport, $target_date, $fdptime, $fartime,
-//                                $e_final_price, $c_final_price, $f_final_price, $eleft, $cleft, $fleft) = $ret[$i];
-//                            echo "$fid, $ftype, $src_airport, $dst_airport, $target_date, $fdptime, $fartime,
-//                            $e_final_price, $c_final_price, $f_final_price, $eleft, $cleft, $fleft <br />";
                         }
                         echo "</table>";
+                        echo "<button name= \"order_b\" type='submit' >预订</button>";
                     }
                 }
                 catch (mysqli_sql_exception $ex) {

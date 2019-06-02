@@ -367,7 +367,7 @@ final class User_functions {
      * @param string $offtime   : tookoff time of the flight
      * @throws user_exception
      */
-    public static function order_tickets(mysqli &$link, flight_User &$usr, $fid, $seat_class, string $offtime) {
+    public static function order_tickets(mysqli &$link, $uid, $fid, $seat_class, string $offtime) {
         try {
             $try_times = self::RETRY_TIMES;
             $succeeded = false;
@@ -395,6 +395,7 @@ final class User_functions {
                     continue;
                 }
                 $tar = $link->query($spec_query);
+//                echo $spec_query;
                 if (list($edis, $cdis, $fdis, $ep, $cp, $fp, $et, $ct, $ft) = $tar->fetch_row()) {
                     if ($seat_class == 'E') {
                         if ((int)$et == (int)$fen) {
@@ -403,6 +404,7 @@ final class User_functions {
                         $e_final_price = new decimal2P((string)$ep);
                         $e_final_price->multiply_discount($edis);
                         $final_price = $e_final_price;
+                        echo $e_final_price;
                     }
                     else if ($seat_class == 'C') {
                         if ((int)$ct == (int)$fcn) {
@@ -411,14 +413,16 @@ final class User_functions {
                         $c_final_price = new decimal2P($cp);
                         $c_final_price->multiply_discount($cdis);
                         $final_price = $c_final_price;
+                        echo $c_final_price;
                     }
-                    else if ((int)$ft == (int)$ffn){
+                    else {
                         if ((int)$ft == (int)$ffn) {
                             throw new user_exception(user_exception_codes::SeatsSoldOut);
                         }
                         $f_final_price = new decimal2P($fp);
                         $f_final_price->multiply_discount($fdis);
                         $final_price = $f_final_price;
+                        echo $f_final_price;
                     }
                 }
                 else {
@@ -441,7 +445,7 @@ final class User_functions {
                 list($oid) = $oid_result->fetch_row();
                 $oid = ($oid == null) ? 90001 : $oid + 1;
                 $insert_order = "insert into " . config\Order_table::NAME . " values(" .
-                                "$oid, $usr->UID, '$cur_time', false, '$final_price');";
+                                "$oid, $uid, '$cur_time', false, '$final_price');";
 //                echo "$insert_order";
                 $link->query($insert_order, MYSQLI_STORE_RESULT);
                 if ($link->affected_rows > 0) {
@@ -454,6 +458,7 @@ final class User_functions {
                     $insert_ticket = "insert into " . config\Ticket_table::NAME . " values(" .
                         "$tid, $oid, false, null, '$offtime', $fid, '$seat_class', '$final_price');";
 
+//                    echo $insert_ticket;
                     $link->query($insert_ticket, MYSQLI_STORE_RESULT);
 
                     if ($link->affected_rows > 0) {
@@ -507,6 +512,7 @@ final class User_functions {
         }
         finally {
             $link->autocommit(true);
+            return $succeeded;
         }
     }
 
@@ -653,6 +659,7 @@ final class User_functions {
         }
         finally {
             $link->autocommit(true);
+            return $succeed;
         }
     }
 
@@ -880,6 +887,19 @@ final class User_functions {
         }
         finally {
             $link->autocommit(true);
+        }
+    }
+
+    public static function get_flying_time(mysqli &$link, $fid) {
+        try {
+            $query = "select ".config\Flight_table::DEPART_TIME." from ".config\Flight_table::NAME.
+                " where ".config\Flight_table::ID." = $fid;";
+            $ret = $link->query($query);
+            list($offtime) = $ret->fetch_row();
+            return $offtime;
+        }
+        catch (Exception $ex) {
+            throw $ex;
         }
     }
 }
