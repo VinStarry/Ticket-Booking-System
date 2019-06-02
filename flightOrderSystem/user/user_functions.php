@@ -1,5 +1,6 @@
 <?php
 
+use config\Flight_table;
 use config\Flying_date_table;
 use config\Order_table;
 use config\Ticket_table;
@@ -30,6 +31,7 @@ class user_exception_codes {
     public const CouldNotFindOrder = 16;
     public const HaventPaid = 17;
     public const TooEarly = 18;
+    public const SeatsSoldOut = 19;
 }
 
 class user_exception extends Exception {
@@ -80,6 +82,8 @@ class user_exception extends Exception {
                 return "Sorry, you haven't paid for the ticket";
             case user_exception_codes::TooEarly:
                 return "To early to do this";
+            case user_exception_codes::SeatsSoldOut:
+                return "Sorry, this type of tickets are sold out";
             default:
                 return "Some user exception occurred.";
         }
@@ -361,14 +365,64 @@ final class User_functions {
      * @param string $offtime   : tookoff time of the flight
      * @throws user_exception
      */
-    public static function order_tickets(mysqli &$link, flight_User &$usr,
-                                         string $prc, $fid, $seat_class, string $offtime) {
+    public static function order_tickets(mysqli &$link, flight_User &$usr, $fid, $seat_class, string $offtime) {
         try {
             $try_times = self::RETRY_TIMES;
             $succeeded = false;
-            $final_price = new decimal2P($prc);
 
             do {
+                $target_date = date("Y-m-d",strtotime($offtime));
+                $spec_query = "select " . config\Flying_date_table::EDISCOUNT . "," .
+                    config\Flying_date_table::CDISCOUNT . "," . config\Flying_date_table::FDISCOUNT . ",".
+                    config\Flying_date_table::EPRICE . "," . config\Flying_date_table::CPRICE . "," .
+                    config\Flying_date_table::FPRICE . "," . config\Flying_date_table::ETAKEN . "," .
+                    config\Flying_date_table::CTAKEN . "," . config\Flying_date_table::FTAKEN .
+                    " from " .config\Flying_date_table::NAME .
+                    " where " .config\Flying_date_table::FID . "=" . $fid .
+                    " and " . config\Flying_date_table::FDATE . "=" . "'" . $target_date . "';";
+
+                $final_price = null;
+
+                $flight_query = "select " .
+                    config\Flight_table::FSEAT_NUMBER . "," . config\Flight_table::CSEAT_NUMBER . "," .
+                    config\Flight_table::ESEAT_NUMBER .
+                    " from " . config\Flight_table::NAME .
+                    " where " .config\Flight_table::ID . "= $fid;";
+                $flight_result = $link->query($flight_query);
+                if ((list($ffn, $fcn, $fen) = $flight_result->fetch_row()) == null) {
+                    continue;
+                }
+                $tar = $link->query($spec_query);
+                if (list($edis, $cdis, $fdis, $ep, $cp, $fp, $et, $ct, $ft) = $tar->fetch_row()) {
+                    if ($seat_class == 'E') {
+                        if ((int)$et == (int)$fen) {
+                            throw new user_exception(user_exception_codes::SeatsSoldOut);
+                        }
+                        $e_final_price = new decimal2P((string)$ep);
+                        $e_final_price->multiply_discount($edis);
+                        $final_price = $e_final_price;
+                    }
+                    else if ($seat_class == 'C') {
+                        if ((int)$ct == (int)$fcn) {
+                            throw new user_exception(user_exception_codes::SeatsSoldOut);
+                        }
+                        $c_final_price = new decimal2P($cp);
+                        $c_final_price->multiply_discount($cdis);
+                        $final_price = $c_final_price;
+                    }
+                    else if ((int)$ft == (int)$ffn){
+                        if ((int)$ft == (int)$ffn) {
+                            throw new user_exception(user_exception_codes::SeatsSoldOut);
+                        }
+                        $f_final_price = new decimal2P($fp);
+                        $f_final_price->multiply_discount($fdis);
+                        $final_price = $f_final_price;
+                    }
+                }
+                else {
+                    continue;
+                }
+
                 $link->autocommit(false);
                 $oid_query = "select max(" . config\Order_table::ID . ")" .
                     " from " . config\Order_table::NAME . ";";
@@ -386,20 +440,20 @@ final class User_functions {
                 $oid = ($oid == null) ? 90001 : $oid + 1;
                 $insert_order = "insert into " . config\Order_table::NAME . " values(" .
                                 "$oid, $usr->UID, '$cur_time', false, '$final_price');";
-
+//                echo "$insert_order";
                 $link->query($insert_order, MYSQLI_STORE_RESULT);
                 if ($link->affected_rows > 0) {
                     $tid_query = "select max(" . config\Ticket_table::ID . ")" .
                         " from " . config\Ticket_table::NAME . ";";
 
                     $tid_result = $link->query($tid_query);
-
                     list($tid) = $tid_result->fetch_row();
                     $tid = ($tid == null) ? 120001 : $tid + 1;
                     $insert_ticket = "insert into " . config\Ticket_table::NAME . " values(" .
                         "$tid, $oid, false, null, '$offtime', $fid, '$seat_class', '$final_price');";
 
                     $link->query($insert_ticket, MYSQLI_STORE_RESULT);
+
                     if ($link->affected_rows > 0) {
                         $update_seats = "";
                         $off_date = date("Y-m-d",strtotime($offtime));
