@@ -1,6 +1,20 @@
 <?php
 namespace config;
 
+final class BJ_time {
+    public static function get_current_datetime() {
+        return date("Y-m-d H:i:s", time()+6*3600) ;
+    }
+
+    public static function get_current_time() {
+        return date("H:i:s", time()+6*3600) ;
+    }
+
+    public static function get_current_date() {
+        return date("Y-m-d", time()+6*3600) ;
+    }
+}
+
 final class DB_info {
     public const SERVER_ADDRESS = "127.0.0.1";
     public const DATABASE_USER_NAME = "seller";
