@@ -373,7 +373,7 @@ final class User_functions {
                 }
 
                 list($oid) = $oid_result->fetch_row();
-                $oid = ($oid == null) ? 90001 : $oid;
+                $oid = ($oid == null) ? 90001 : $oid + 1;
                 $insert_order = "insert into " . config\Order_table::NAME . " values(" .
                                 "$oid, $usr->UID, '$cur_time', false, '$final_price');";
 
@@ -385,7 +385,7 @@ final class User_functions {
                     $tid_result = $link->query($tid_query);
 
                     list($tid) = $tid_result->fetch_row();
-                    $tid = ($tid == null) ? 120001 : $tid;
+                    $tid = ($tid == null) ? 120001 : $tid + 1;
                     $insert_ticket = "insert into " . config\Ticket_table::NAME . " values(" .
                         "$tid, $oid, false, null, '$offtime', $fid, '$seat_class', '$final_price');";
 
@@ -587,10 +587,6 @@ final class User_functions {
         }
     }
 
-    public function lookup_history(mysqli &$link, flight_User &$usr) {
-        // TODO: 6
-    }
-
     public function cancel_ticket(mysqli &$link, flight_User &$usr) {
         // TODO: 7
         try {
@@ -608,6 +604,10 @@ final class User_functions {
         finally {
             $link->autocommit(true);
         }
+    }
+
+    public function lookup_history(mysqli &$link, flight_User &$usr) {
+        // TODO: 6
     }
 
     public function show_data(mysqli &$link, flight_User &$usr) {
