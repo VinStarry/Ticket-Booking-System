@@ -297,9 +297,79 @@ final class User_functions {
         }
     }
 
-    public function order_tickets(flight_User &$usr) {
-        // TODO: 2
+    /**
+     * order a ticket for the specific user
+     * @param mysqli $link
+     * @param flight_User $usr
+     * @param string $prc   : price of all tickets (in this one order)
+     * @param $fid
+     * @param $seat_class
+     * @param string $offtime   : tookoff time of the flight
+     * @throws user_exception
+     */
+    public static function order_tickets(mysqli &$link, flight_User &$usr,
+                                         string $prc, $fid, $seat_class, string $offtime) {
+        try {
+            $try_times = self::RETRY_TIMES;
+            $succeeded = false;
+            $final_price = new decimal2P($prc);
 
+            do {
+                $link->autocommit(false);
+                $oid_query = "select max(" . config\Order_table::ID . ")" .
+                    " from " . config\Order_table::NAME . ";";
+
+                $oid_result = $link->query($oid_query);
+                $cur_time = config\BJ_time::get_current_datetime();
+
+                list($oid) = $oid_result->fetch_row();
+                $oid = ($oid == null) ? 90001 : $oid;
+                $insert_order = "insert into " . config\Order_table::NAME . " values(" .
+                                "$oid, $usr->UID, '$cur_time', false, '$final_price');";
+
+                $link->query($insert_order, MYSQLI_STORE_RESULT);
+                if ($link->affected_rows > 0) {
+                    $tid_query = "select max(" . config\Ticket_table::ID . ")" .
+                        " from " . config\Ticket_table::NAME . ";";
+
+                    $tid_result = $link->query($tid_query);
+
+                    list($tid) = $tid_result->fetch_row();
+                    $tid = ($tid == null) ? 120001 : $tid;
+                    $insert_ticket = "insert into " . config\Ticket_table::NAME . " values(" .
+                        "$tid, $oid, false, null, '$offtime', $fid, '$seat_class', '$final_price');";
+
+                    $link->query($insert_ticket, MYSQLI_STORE_RESULT);
+                    if ($link->affected_rows > 0) {
+                        $succeeded = true;
+                        $link->commit();
+                        break;
+                    }
+                    else {
+                        $link->rollback();
+                    }
+                }
+                else {
+                    $link->rollback();
+                }
+            } while($try_times--);
+
+            if ($try_times == 0 && $succeeded == false) {
+                throw new user_exception(user_exception_codes::ServerBusy);
+            }
+        }
+        catch (mysqli_sql_exception $ex) {
+            throw $ex;
+        }
+        catch (user_exception $ex) {
+            throw $ex;
+        }
+        catch (Exception $ex) {
+            throw $ex;
+        }
+        finally {
+            $link->autocommit(true);
+        }
     }
 
     public function pay_for_tickets(mysqli &$link, flight_User &$usr) {
