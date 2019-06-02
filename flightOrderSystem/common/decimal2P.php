@@ -53,6 +53,10 @@ class decimal2P {
         $this->money *= (int)($b->getMoney() / 100);
     }
 
+    public function multiply_discount(int $b) {
+        $this->money *= ($b / 100);
+    }
+
     public function getMoney() {
         return $this->money;
     }
