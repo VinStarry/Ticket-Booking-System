@@ -3,15 +3,19 @@ namespace config;
 
 final class BJ_time {
     public static function get_current_datetime() {
-        return date("Y-m-d H:i:s", time()+6*3600) ;
+        return date("Y-m-d H:i:s", time()+8*3600) ;
     }
 
     public static function get_current_time() {
-        return date("H:i:s", time()+6*3600) ;
+        return date("H:i:s", time()+8*3600) ;
     }
 
     public static function get_current_date() {
-        return date("Y-m-d", time()+6*3600) ;
+        return date("Y-m-d", time()+8*3600) ;
+    }
+
+    public static function get_limited_datetime() {
+        return date("Y-m-d H:i:s", time()+11*3600) ;
     }
 }
 
