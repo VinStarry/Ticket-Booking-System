@@ -65,7 +65,7 @@ class user_exception extends Exception {
             case user_exception_codes::NoTargetFlight:
                 return "No flight satisfy all the conditions";
             case user_exception_codes::ServerBusy:
-                return "Operation failed, probably the server is busy, please contact the admin";
+                return "Operation failed, probably the server is busy or input is invalid, please contact the admin";
             case user_exception_codes::TooLatetoDo:
                 return "It it too late";
             case user_exception_codes::AlreadyCanceled:
@@ -512,7 +512,6 @@ final class User_functions {
         }
         finally {
             $link->autocommit(true);
-            return $succeeded;
         }
     }
 
@@ -525,10 +524,12 @@ final class User_functions {
      */
     public static function pay_for_orders(mysqli &$link, flight_User &$usr, $oid) {
         try {
+            $succeeded = false;
             $select_order = "select ".config\Ticket_table::CANCELED . "," .
                 config\Ticket_table::TOOKOFF_TIME .
                 " from " . config\Ticket_table::NAME .
                 " where " . config\Ticket_table::OID . "=" . $oid . ";";
+//            echo $select_order;
             $result_rows = $link->query($select_order);
 
             $satisfied = true;
@@ -550,7 +551,6 @@ final class User_functions {
                 $select_order = "select " .config\Order_table::PAID . "," .
                     config\Order_table::COST . " from " . config\Order_table::NAME .
                     " where " . config\Order_table::ID . " = " . $oid . ";";
-
                 $result_rows = $link->query($select_order);
 
                 if (list($paid, $cost) = $result_rows->fetch_row()) {
@@ -567,15 +567,19 @@ final class User_functions {
                         $update_query = "update " . config\Order_table::NAME .
                             " set " . config\Order_table::PAID . " = true" .
                             " where " . config\Order_table::ID . " = " . $oid . ";";
+
                         $link->query($update_query, MYSQLI_STORE_RESULT);
+
                         if ($link->affected_rows > 0) {
                             $usr->decBalance($cost);
                             $update_query = "update " . config\User_table::NAME .
                                 " set " . config\User_table::BALANCE . " = " .$usr->getUBalance() .
                                 " where " . config\User_table::ID . " = " . $usr->UID . ";";
                             $link->query($update_query, MYSQLI_STORE_RESULT);
+
                             if ($link->affected_rows > 0) {
                                 $link->commit();
+                                $succeeded = true;
                             }
                             else {
                                 $usr->incBalance($cost);
@@ -595,10 +599,10 @@ final class User_functions {
             }
 
         }
-        catch (mysqli_sql_exception $ex) {
+        catch (user_exception $ex) {
             throw $ex;
         }
-        catch (user_exception $ex) {
+        catch (mysqli_sql_exception $ex) {
             throw $ex;
         }
         catch (Exception $ex) {
@@ -659,7 +663,6 @@ final class User_functions {
         }
         finally {
             $link->autocommit(true);
-            return $succeed;
         }
     }
 
@@ -756,7 +759,6 @@ final class User_functions {
      * @throws user_exception
      */
     public static function cancel_ticket(mysqli &$link, flight_User &$usr, $tid) {
-        // TODO: 7 UPDATE Flying_date TABLE!
         try {
             $try_times = self::RETRY_TIMES;
             $succeeded = false;

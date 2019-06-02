@@ -44,12 +44,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
                 else {
                     $offdatetime = $in_date." ".$offtime;
-                    if (User_functions::order_tickets($conn->link, $username, $fid, $seatclass, $offdatetime)) {
-                        echo "<script language=javascript>alert('订票成功!');</script>";
-                    }
-                    else {
-                        echo "<script language=javascript>alert('订票失败!');</script>";
-                    }
+                    User_functions::order_tickets($conn->link, $username, $fid, $seatclass, $offdatetime);
+                    echo "<script language=javascript>alert('订票成功!');</script>";
                 }
             }
         }

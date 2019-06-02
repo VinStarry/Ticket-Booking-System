@@ -35,9 +35,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             else {
                 $usr = User_functions::login_account($conn->link, $username, $password);
-                if (User_functions::add_balance($conn->link, $usr, $balance)) {
-                    echo "<script language=javascript>alert('充值' + $balance + '成功');</script>";
-                }
+                User_functions::add_balance($conn->link, $usr, $balance);
+                echo "<script language=javascript>alert('充值' + $balance + '成功');</script>";
             }
         }
         catch (user_exception $ex) {
