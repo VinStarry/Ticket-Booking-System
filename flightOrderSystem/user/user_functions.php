@@ -1,5 +1,6 @@
 <?php
 
+use config\Flying_date_table;
 use config\Order_table;
 use config\Ticket_table;
 use config\User_table;
@@ -359,7 +360,6 @@ final class User_functions {
      * @param $seat_class
      * @param string $offtime   : tookoff time of the flight
      * @throws user_exception
-     * @todo : UPDATE Flying_date TABLE!
      */
     public static function order_tickets(mysqli &$link, flight_User &$usr,
                                          string $prc, $fid, $seat_class, string $offtime) {
@@ -401,9 +401,31 @@ final class User_functions {
 
                     $link->query($insert_ticket, MYSQLI_STORE_RESULT);
                     if ($link->affected_rows > 0) {
-                        $succeeded = true;
-                        $link->commit();
-                        break;
+                        $update_seats = "";
+                        $off_date = date("Y-m-d",strtotime( $offtime));
+                        if ($seat_class == 'E') {
+//                            $update_seats = "update Flying_date set e_taken = e_taken + 1 where f_date = '2019-08-31' and f_FID = 351;"
+                            $update_seats = "update ".config\Flying_date_table::NAME." set ".config\Flying_date_table::ETAKEN." = ".config\Flying_date_table::ETAKEN." + 1".
+                                " where f_date = '$off_date' and f_FID = '$fid';";
+                        }
+                        else if ($seat_class == 'C') {
+                            $update_seats = "update ".config\Flying_date_table::NAME." set ".config\Flying_date_table::CTAKEN." = ".config\Flying_date_table::CTAKEN." + 1".
+                                " where f_date = '$off_date' and f_FID = '$fid';";
+                        }
+                        else {
+                            $update_seats = "update ".config\Flying_date_table::NAME." set ".config\Flying_date_table::FTAKEN." = ".config\Flying_date_table::FTAKEN." + 1".
+                                " where f_date = '$off_date' and f_FID = '$fid';";
+                        }
+//                        echo $update_seats. "<br />";
+                        $link->query($update_seats, MYSQLI_STORE_RESULT);
+                        if($link->affected_rows > 0) {
+                            $succeeded = true;
+                            $link->commit();
+                            break;
+                        }
+                        else {
+                            $link->rollback();
+                        }
                     }
                     else {
                         $link->rollback();
