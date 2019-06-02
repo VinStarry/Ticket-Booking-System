@@ -606,14 +606,35 @@ final class User_functions {
         }
     }
 
-    public function lookup_history(mysqli &$link, flight_User &$usr) {
-        // TODO: 6
-    }
-
-    public function show_data(mysqli &$link, flight_User &$usr) {
-        // TODO: 8
+    /**
+     * look up the history of ticket and order, using join ticket and order to show
+     * @param mysqli $link
+     * @param flight_User $usr
+     * @return array
+     * @throws user_exception
+     */
+    public static function lookup_history(mysqli &$link, flight_User &$usr) {
         try {
+            $query = "select ".
+                config\Order_table::ID.",".config\Order_table::UID.",".config\Order_table::TIME.",".
+                config\Order_table::PAID.",".config\Order_table::COST.",".
+                config\Ticket_table::ID.",".config\Ticket_table::CANCELED.",".
+                config\Ticket_table::GOT_TIME.",".config\Ticket_table::TOOKOFF_TIME.",".
+                config\Ticket_table::FID.",".config\Ticket_table::SEATCLAS.",".config\Ticket_table::PRICE." from ".
+                config\Order_table::NAME." join ".config\Ticket_table::NAME." on ".
+                config\Order_table::NAME.".".config\Order_table::ID." = ".config\Ticket_table::NAME.".".config\Ticket_table::OID.
+                " and ".config\Order_table::UID." = ". $usr->UID.";";
 
+            $result = $link->query($query);
+            $ret = array();
+            while ($temp = $result->fetch_row()) {$ret[] = $temp;}
+//            while(list($oid, $uid, $otime, $opaid, $ocost, $tid, $tcanceled, $tgottime, $tofftime,
+//                $fid, $seatclass, $tprice) = $result->fetch_row()) {
+//
+//            }
+            $result->free();
+//            var_dump($ret);
+            return $ret;
         }
         catch (mysqli_sql_exception $ex) {
             throw $ex;
