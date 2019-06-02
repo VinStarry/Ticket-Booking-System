@@ -402,7 +402,7 @@ final class User_functions {
                     $link->query($insert_ticket, MYSQLI_STORE_RESULT);
                     if ($link->affected_rows > 0) {
                         $update_seats = "";
-                        $off_date = date("Y-m-d",strtotime( $offtime));
+                        $off_date = date("Y-m-d",strtotime($offtime));
                         if ($seat_class == 'E') {
 //                            $update_seats = "update Flying_date set e_taken = e_taken + 1 where f_date = '2019-08-31' and f_FID = 351;"
                             $update_seats = "update ".config\Flying_date_table::NAME." set ".config\Flying_date_table::ETAKEN." = ".config\Flying_date_table::ETAKEN." + 1".
@@ -685,10 +685,82 @@ final class User_functions {
         }
     }
 
-    public function cancel_ticket(mysqli &$link, flight_User &$usr) {
+    public static function cancel_ticket(mysqli &$link, flight_User &$usr, $tid) {
         // TODO: 7 UPDATE Flying_date TABLE!
         try {
+            $try_times = self::RETRY_TIMES;
+            $succeeded = false;
 
+            do {
+                $tic_search = "select ".config\Ticket_table::OID.",".config\Ticket_table::CANCELED.",".config\Ticket_table::GOT_TIME.","
+                    .config\Ticket_table::TOOKOFF_TIME.",".config\Ticket_table::FID.",".config\Ticket_table::SEATCLAS.",".config\Ticket_table::PRICE.
+                    " from ".config\Ticket_table::NAME." where ".config\Ticket_table::ID." = $tid;";
+                $tic_result = $link->query($tic_search);
+
+                if (list($oid, $canceled, $gtime, $offtime, $fid, $seat_class, $price) = $tic_result->fetch_row()) {
+//                    echo "$oid, $canceled, $gtime, $offtime, $fid, $seat_class, $price <br />";
+                    $curtime = config\BJ_time::get_current_datetime();
+                    if ($gtime != null) {
+                        throw new user_exception(user_exception_codes::AlreadyGot);
+                    }
+                    else if(strtotime($curtime) > strtotime($offtime)) {
+                        throw new user_exception(user_exception_codes::TooLatetoDo);
+                    }
+                    else if ((bool)$canceled == true) {
+                        throw new user_exception(user_exception_codes::AlreadyCanceled);
+                    }
+                    else {
+                        $query_paid = "select ".config\Order_table::PAID." from ".
+                            config\Order_table::NAME." where ".config\Order_table::ID." = $oid;";
+                        $paid_result = $link->query($query_paid);
+
+                        if (list($alpaid) = $paid_result->fetch_row()) {
+                            $link->autocommit(false);
+                            $off_date = date("Y-m-d",strtotime( $offtime));
+                            $update_seats = "";
+                            if ($seat_class == 'E') {
+//                            $update_seats = "update Flying_date set e_taken = e_taken - 1 where f_date = '2019-08-31' and f_FID = 351;"
+                                $update_seats = "update ".config\Flying_date_table::NAME." set ".config\Flying_date_table::ETAKEN." = ".config\Flying_date_table::ETAKEN." - 1".
+                                    " where f_date = '$off_date' and f_FID = '$fid';";
+                            }
+                            else if ($seat_class == 'C') {
+                                $update_seats = "update ".config\Flying_date_table::NAME." set ".config\Flying_date_table::CTAKEN." = ".config\Flying_date_table::CTAKEN." - 1".
+                                    " where f_date = '$off_date' and f_FID = '$fid';";
+                            }
+                            else {
+                                $update_seats = "update ".config\Flying_date_table::NAME." set ".config\Flying_date_table::FTAKEN." = ".config\Flying_date_table::FTAKEN." - 1".
+                                    " where f_date = '$off_date' and f_FID = '$fid';";
+                            }
+                            $link->query($update_seats, MYSQLI_STORE_RESULT);
+                            if ($link->affected_rows > 0) {
+                                $reg_cancel = "update ".config\Ticket_table::NAME.
+                                    " set ".config\Ticket_table::CANCELED." = true where ".config\Ticket_table::ID." = $tid;";
+                                $link->query($reg_cancel, MYSQLI_STORE_RESULT);
+//                                echo $reg_cancel . "<br />";
+                                if ($link->affected_rows > 0) {
+                                    if ((bool)$alpaid == true) {
+                                        $refund = "update ".config\User_table::NAME.
+                                            " set ".config\User_table::BALANCE." = ".config\User_table::BALANCE.
+                                            " + $price where ".config\User_table::ID." = $usr->UID;";
+//                                        echo $refund . "<br />";
+                                        $link->query($refund, MYSQLI_STORE_RESULT);
+                                        if ($link->affected_rows > 0) {
+                                            $link->commit();
+                                            $succeeded = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }while($try_times--);
+            if ($try_times == 0 && !$succeeded) {
+                $link->rollback();
+                throw new user_exception(user_exception_codes::ServerBusy);
+            }
         }
         catch (mysqli_sql_exception $ex) {
             throw $ex;
