@@ -359,6 +359,7 @@ final class User_functions {
      * @param $seat_class
      * @param string $offtime   : tookoff time of the flight
      * @throws user_exception
+     * @todo : UPDATE Flying_date TABLE!
      */
     public static function order_tickets(mysqli &$link, flight_User &$usr,
                                          string $prc, $fid, $seat_class, string $offtime) {
@@ -663,7 +664,7 @@ final class User_functions {
     }
 
     public function cancel_ticket(mysqli &$link, flight_User &$usr) {
-        // TODO: 7
+        // TODO: 7 UPDATE Flying_date TABLE!
         try {
 
         }
