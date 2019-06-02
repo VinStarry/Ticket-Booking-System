@@ -221,7 +221,7 @@ final class User_functions {
     public static function search_tickets(string $target_date,
                                    string $from_place, string $to_place) {
         try {
-            $conn = new DBConnector();
+            $conn = new DBConnector(false);
             $src_arr = $conn->get_airport_and_code_from_city($from_place);
             $dst_arr = $conn->get_airport_and_code_from_city($to_place);
 
@@ -299,6 +299,7 @@ final class User_functions {
 
     public function order_tickets(flight_User &$usr) {
         // TODO: 2
+
     }
 
     public function pay_for_tickets(mysqli &$link, flight_User &$usr) {

@@ -17,9 +17,11 @@ final class BJ_time {
 
 final class DB_info {
     public const SERVER_ADDRESS = "127.0.0.1";
-    public const DATABASE_USER_NAME = "seller";
-    public const DATABASE_USER_PSW = "123456";
+    public const DATABASE_ADMIN_NAME = "seller";
+    public const DATABASE_ADMIN_PSW = "123456";
     public const DATABASE_NAME = "ticket";
+    public const DATABASE_COSTUMER_NAME = "customer";
+    public const DATABASE_COSTUMER_PSW = "123456";
 }
 
 final class Code_CITY {

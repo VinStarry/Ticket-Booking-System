@@ -21,10 +21,10 @@ class DBConnector {
      * construct connection to MySQL based on parameters
      * pay ATTENTION that these parameters (including the link itself) are PRIVATE variables
      */
-    function __construct() {
+    function __construct(bool $admin = true) {
         $this->db_host = INFO::SERVER_ADDRESS;
-        $this->db_user = INFO::DATABASE_USER_NAME;
-        $this->db_password = INFO::DATABASE_USER_PSW;
+        $this->db_user = $admin ? INFO::DATABASE_ADMIN_NAME : INFO::DATABASE_COSTUMER_NAME;
+        $this->db_password = $admin ? INFO::DATABASE_ADMIN_PSW : INFO::DATABASE_COSTUMER_PSW;
         $this->db_name = INFO::DATABASE_NAME;
 
         $this->link = mysqli_connect($this->db_host, $this->db_user, $this->db_password, $this->db_name);
