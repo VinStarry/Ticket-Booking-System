@@ -739,6 +739,13 @@ final class User_functions {
         }
     }
 
+    /**
+     * CANCEL TICKETs
+     * @param mysqli $link
+     * @param flight_User $usr
+     * @param $tid
+     * @throws user_exception
+     */
     public static function cancel_ticket(mysqli &$link, flight_User &$usr, $tid) {
         // TODO: 7 UPDATE Flying_date TABLE!
         try {
