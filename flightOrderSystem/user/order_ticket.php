@@ -19,17 +19,22 @@ include_once '../common/config.php';
 include_once '../common/DBConnector.php';
 include_once 'user_functions.php';
 $username = $password = $signup = $login = "";
+$in_date = test_input($_POST["in_date"]);
+$src_city = $_POST['src_city'] ;
+$dst_city = $_POST['dst_city'];
+
+//echo "$in_date, $src_city, $dst_city";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = test_input($_SESSION['UID']);
     $fid = test_input($_POST["fid"]);
     $in_date = test_input($_POST["in_date"]);
     $src_city = $_POST['src_city'] ;
-    $dst_city = $_POST['des_city'];
+    $dst_city = $_POST['dst_city'];
     $order_button = test_input($_POST["order_button"]);
     $seatclass = (string)test_input($_POST["q"]);
     $conn = new DBConnector(false);
-//    echo "$username, $fid, $order_button, $seatclass, $in_date";
+    $option = $_POST['option'];
     if (!strcmp($order_button, "预订")) {
         try {
             $user = User_functions::login_account($conn->link, (int)$username, $password);
@@ -65,6 +70,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             echo "<script language=javascript>location.href='$url'</script>";
         }
     }
+    else if (!strcmp($option, "返回")) {
+        $url = "user_main.php";
+        echo "<script language=javascript>location.href='$url'</script>";
+    }
 }
 
 function test_input($data) {
@@ -92,6 +101,7 @@ function test_input($data) {
         </p>
         <p>
         <input name="order_button" type="submit" value="预订"/>
+            <input name="option" type="submit" value="返回"/>
         </p>
         <div style="text-align: center;margin-left: 130px">
         <p>

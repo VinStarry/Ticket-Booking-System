@@ -14,30 +14,23 @@
 </style>
 <html>
 <body>
-<?php
+<?php session_start();
 include_once '../common/config.php';
 include_once '../common/DBConnector.php';
 include_once 'user_functions.php';
-$username = $password = $signup = $login = "";
+$username = $_SESSION['UID'];
+$password = $_SESSION['PSW'];
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = test_input($_POST["username"]);
     $order_button = test_input($_POST["order_button"]);
-    $password = test_input($_POST["password"]);
     $balance = (string)test_input($_POST["q"]);
     $conn = new DBConnector(false);
 //    echo "$username, $order_button, $balance";
     if (!strcmp($order_button, "充值")) {
         try {
-            $user = User_functions::login_account($conn->link, (int)$username, $password);
-            if (!is_numeric($username)) {
-                echo "<script language=javascript>alert('账户必须是全数字!');</script>";
-            }
-            else {
-                $usr = User_functions::login_account($conn->link, $username, $password);
-                User_functions::add_balance($conn->link, $usr, $balance);
-                echo "<script language=javascript>alert('充值' + $balance + '成功');</script>";
-            }
+            $usr = User_functions::login_account($conn->link, $username, $password);
+            User_functions::add_balance($conn->link, $usr, $balance);
+            echo "<script language=javascript>alert('充值' + $balance + '成功');</script>";
         }
         catch (user_exception $ex) {
             echo "<script language=javascript>alert('$ex');</script>";
@@ -47,6 +40,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
         catch (Exception $ex) {
             echo "<script language=javascript>alert('$ex');</script>";
+        }
+        finally {
+            $url = "user_main.php";
+            echo "<script language=javascript>location.href='$url'</script>";
         }
     }
 }
@@ -62,12 +59,6 @@ function test_input($data) {
     <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
         <p>
             欢迎登陆充值系统
-        </p>
-        <p>
-            账  户：<input type="text" name="username"/>
-        </p>
-        <p>
-            密  码：<input type="password" name="password"/>
         </p>
         <p>
             充值金额: <input type="radio" name="q" value="1000.00" />1000.00

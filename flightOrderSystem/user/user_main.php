@@ -163,7 +163,7 @@ function test_input($data) {
 ?>
 
 <div class="divForm">
-    <form method="post", action="order_ticket.php">
+    <form method="post", action="choose_file.php">
         <p>
                 机票预订功能块
         </p>
@@ -188,7 +188,9 @@ function test_input($data) {
         <p>
             出发时间：<input type="date" name="in_date"/>
         </p>
-        <input name="signupok" type="submit" value="OK"/>
+        <input name="option" type="submit" value="查票"/>
+        <input name="option" type="submit" value="充值"/>
+        <input name="option" type="submit" value="历史"/>
         <p>
         <div style="text-align: center">
             <?php session_start();
@@ -197,9 +199,9 @@ function test_input($data) {
                 $dst_city = test_input($_POST["des_city"]);
                 $in_date =  test_input($_POST["in_date"]);
                 $signupok = test_input($_POST["signupok"]);
+                $signupok2 = test_input($_POST["signupok2"]);
                 $uname = test_input($_SESSION["UID"]);
                 $upsw = test_input($_SESSION["PSW"]);
-                $order_b = test_input($_POST["order_b"]);
 
                 $seatclass = test_input($_POST["q"]);
 
