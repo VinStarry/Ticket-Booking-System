@@ -1,5 +1,12 @@
 <?php
 
+include_once '../common/decimal2P.php';
+include_once '../common/config.php';
+include_once '../common/DBConnector.php';
+include_once '../common/Flight.php';
+
+error_reporting(E_ALL | E_STRICT);
+
 class admin_exception_codes {
     public const UNKNOWN = 0;
     public const FIDNotNumeric = 1;
@@ -50,7 +57,7 @@ class admin_exception extends Exception {
 
 class admin_functions {
 
-    private $airports;
+    public $airports;
     private $conn;
     private const RETRY_TIMES = 5;
 
@@ -78,6 +85,7 @@ class admin_functions {
             $duration, $depart_place, $arrive_place,
             $begin_service_date, $end_service_date, $fnum, $enum, $cnum);
 
+
         /* input parameters tests */
         try {
             if (!is_numeric($fid)) {
@@ -104,7 +112,6 @@ class admin_functions {
                     $this->conn->link->autocommit(false);
                     $insert_flight_query = "insert into " .config\Flight_table::NAME . " values(" .
                     $new_flight. ");";
-//                    echo $insert_flight_query. "<br />";
                     $this->conn->link->query($insert_flight_query, MYSQLI_STORE_RESULT);
                     $insert_flight_result = $this->conn->link->affected_rows;
 
@@ -123,7 +130,7 @@ class admin_functions {
             }
         }
         catch (mysqli_sql_exception $ex) {
-            echo $ex . "<br />";
+//            echo $ex . "<br />";
             throw $ex;
         }
         catch (admin_exception $ex) {
@@ -202,15 +209,14 @@ class admin_functions {
         }
     }
 
-    function delete_flying_date($fid, $cancel_date) {
-        // TODO: at last --- 1
-        return ;
-    }
+//    function delete_flying_date($fid, $cancel_date) {
+//
+//        return ;
+//    }
 
     function list_data() {
         try {
             $query = "select * from ".config\Views::DATA_SEL . ";";
-//            echo "$query";
             $result = $this->conn->link->query($query);
             $ret = array();
             while (list($f_date, $fid, $etaken, $ctaken, $ftaken, $revenue, $fn, $en, $cn) = $result->fetch_row()) {
@@ -220,7 +226,6 @@ class admin_functions {
                 $ret[] = array($f_date, $fid, $etaken, $ctaken, $ftaken, $revenue, $fn, $en, $cn, $e_taken_rate, $c_taken_rate, $f_taken_rate);
             }
             $result->free();
-//            var_dump($ret);
             return $ret;
         }
         catch (mysqli_sql_exception $ex) {
