@@ -1,7 +1,7 @@
 <style type="text/css">
     .divForm{
         position: absolute;/*绝对定位*/
-        width: 300px;
+        width: 500px;
         height: 200px;
 
         border: 1px solid red;

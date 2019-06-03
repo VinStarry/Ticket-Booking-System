@@ -71,8 +71,6 @@ function test_input($data) {
         <input name="order_button" type="submit" value="添加"/>
         <p>
             <?php
-//            $fid = $begin_date = $end_date = $interval_days = $edis = $cdis = $fdis =
-//            $E_seat_price = $C_seat_price = $F_seat_price = "";
             if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $fid = test_input($_POST["fid"]);
                 $begin_date = test_input($_POST["begin_date"]);
