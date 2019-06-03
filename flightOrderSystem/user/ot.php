@@ -79,7 +79,7 @@ function test_input($data) {
                             }
                             else if (!strcmp($sel, "cancel")) {
                                 User_functions::cancel_ticket($conn->link, $user, $otid);
-//                                echo "<script language=javascript>alert('退票成功');</script>";
+                                echo "<script language=javascript>alert('退票成功');</script>";
                             }
                             else {
                                 echo "<script language=javascript>alert('请选择一项操作');</script>";

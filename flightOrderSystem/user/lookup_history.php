@@ -13,7 +13,7 @@ function test_input($data) {
     return $data;
 }
 ?>
-<div style="text-align: center; vertical-align: center; margin-top: 200px" >
+<div style="text-align: center; vertical-align: center; margin-top: 100px" >
     <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
         <p>
             查看历史订票记录模块
@@ -36,6 +36,22 @@ function test_input($data) {
                 if (!strcmp($order_button, "查看")) {
                     try {
                         $user = User_functions::login_account($conn->link, (int)$username, $password);
+                        $ubalance = $user->getUBalance();
+                        echo "<div style=\"text-align: center\">";
+                        echo "<table border=\"2\" align='center'>
+                        <tr>
+                        <th>用户编号</th>
+                        <th>用户名称</th>
+                        <th>用户电话</th>
+                        <th>用户余额</th>
+                        <tr>
+                        <th>$user->UID</th>
+                        <th>$user->UName</th>
+                        <th>$user->UTelephone</th>
+                        <th>$ubalance</th>
+                        </tr>";
+                        echo "</table>";
+                        echo "</div><p />";
                         if (!is_numeric($username)) {
                             echo "<script language=javascript>alert('账户必须是全数字!');</script>";
                         }

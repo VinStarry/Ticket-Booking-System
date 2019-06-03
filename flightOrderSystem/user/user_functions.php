@@ -407,7 +407,7 @@ final class User_functions {
                         $e_final_price = new decimal2P((string)$ep);
                         $e_final_price->multiply_discount($edis);
                         $final_price = $e_final_price;
-                        echo $e_final_price;
+//                        echo $e_final_price;
                     }
                     else if ($seat_class == 'C') {
                         if ((int)$ct == (int)$fcn) {
@@ -416,7 +416,7 @@ final class User_functions {
                         $c_final_price = new decimal2P($cp);
                         $c_final_price->multiply_discount($cdis);
                         $final_price = $c_final_price;
-                        echo $c_final_price;
+//                        echo $c_final_price;
                     }
                     else {
                         if ((int)$ft == (int)$ffn) {
@@ -425,7 +425,7 @@ final class User_functions {
                         $f_final_price = new decimal2P($fp);
                         $f_final_price->multiply_discount($fdis);
                         $final_price = $f_final_price;
-                        echo $f_final_price;
+//                        echo $f_final_price;
                     }
                 }
                 else {
@@ -691,9 +691,10 @@ final class User_functions {
                     config\Ticket_table::GOT_TIME . "," . config\Ticket_table::TOOKOFF_TIME .
                     " from " . config\Ticket_table::NAME . " where " . config\Ticket_table::ID . " = " . $tid . ";";
 
+//                echo $tic_search;
                 $tic_result = $link->query($tic_search);
 
-                while (list($oid, $canceled, $gott, $offt) = $tic_result->fetch_row()) {
+                if (list($oid, $canceled, $gott, $offt) = $tic_result->fetch_row()) {
 //                    echo "$oid, $canceled, $gott, $offt <br />";
                     if ((bool)$canceled == true) {
                         throw new user_exception(user_exception_codes::AlreadyCanceled);
@@ -713,6 +714,7 @@ final class User_functions {
                             $result = $link->query($order_search);
 
                             list($paid) = $result->fetch_row();
+//                            echo "$paid";
                             if ($paid != null && (bool)$paid == true) {
                                 // update ticket table
                                 $link->autocommit(false);
@@ -724,9 +726,10 @@ final class User_functions {
                                 $link->query($update_query, MYSQLI_STORE_RESULT);
 
                                 if ($link->affected_rows == 1) {
+                                    $succeeded = true;
                                     $link->commit();
                                     $link->autocommit(true);
-                                    return;
+                                    break;
                                 }
                                 else {
                                     $link->rollback();
@@ -737,6 +740,9 @@ final class User_functions {
                             }
                         }
                     }
+                }
+                else {
+                    throw new user_exception(user_exception_codes::CouldNotFindTicket);
                 }
 
             }while($try_times--);
@@ -749,9 +755,7 @@ final class User_functions {
             throw $ex;
         }
         catch (user_exception $ex) {
-            throw $ex;
-        }
-        catch (Exception $ex) {
+            echo $ex;
             throw $ex;
         }
         finally {
