@@ -134,8 +134,8 @@ include_once '../common/config.php';
 include_once '../common/DBConnector.php';
 include_once 'user_functions.php';
 
-$uname = $_POST["username"];
-$upsw =  $_POST["password"];
+$uname = test_input($_SESSION["UID"]);
+$upsw =  test_input($_SESSION["PSW"]);
 $conn = new DBConnector(false);
 $city_arr = array_unique($conn->get_city_from_code("", true));
 
@@ -151,9 +151,6 @@ function test_input($data) {
     <form method="post">
         <p>
                 机票预订功能块
-        </p>
-        <p>
-            账  户：<input type="text" name="username"/>
         </p>
         <p>
             出发城市：<select name="src_city">
@@ -184,14 +181,16 @@ function test_input($data) {
         </p>
         <p>
         <div style="text-align: center">
-            <?php
+            <?php session_start();
             if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $src_city = test_input($_POST["src_city"]);
                 $dst_city = test_input($_POST["des_city"]);
                 $in_date = test_input($_POST["in_date"]);
                 $signupok = test_input($_POST["signupok"]);
-                $userid = test_input($_POST["username"]);
-//                echo "$userid <br >";
+                $uname = test_input($_SESSION["UID"]);
+                $upsw = test_input($_SESSION["PSW"]);
+                $seatclass = test_input($_POST["q"]);
+                echo "$uname, $upsw, $src_city, $dst_city, $in_date, $signupok, $seatclass <br >";
                 try {
                     if (!strcmp($signupok, "OK")) {
                         $ret = User_functions::search_tickets($in_date, $src_city, $dst_city);

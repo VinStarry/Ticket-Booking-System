@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <title> 上座率表格 </title>
+    <title> 收益表格 </title>
     <meta charset="utf-8">
     <meta name="Generator" content="EditPlus">
     <meta name="Author" content="tschengbin">
@@ -47,37 +47,26 @@
 <table id="tableSort">
     <thead>
     <tr>
-        <th type="string">日期</th>
-        <th type="number">飞机编号</th>
-        <th type="number">经济舱上座率</th>
-        <th type="string">商务舱上座率</th>
-        <th type="number">经济舱上座率</th>
-        <th type="number">收益</th>
+        <th type="string">月份</th>
+        <th type="number">收益总额</th>
     </tr>
     </thead>
     <tbody>
     <tr class="hover">
-    <?php
+        <?php
         include '../common/config.php';
         include '../common/DBConnector.php';
         include 'admin_functions.php';
         $admin = new admin_functions();
-        $data = $admin->list_data();
-        $display = array();
-        for ($i = 0; $i < count($data); $i++) {
-            list($f_date, $fid, $etaken, $ctaken, $ftaken, $revenue, $fn, $en, $cn, $e_taken_rate, $c_taken_rate, $f_taken_rate) = $data[$i];
-            $temp = array($f_date, $fid, $e_taken_rate, $c_taken_rate, $f_taken_rate, $revenue);
-            $display[] = $temp;
-        }
-        for ($j = 0; $j < count($display); $j++) {
-            if ($j != 0) echo "<tr>";
-            $temp = $display[$j];
-            for ($k = 0; $k < count($temp); $k++) {
-                echo "<td>$temp[$k]</td>";
-            }
+        $data = $admin->show_revenue_by_month($admin->list_data());
+
+        foreach ($data as $key => $value) {
+            echo "<td>$key</td>";
+            echo "<td>$value</td>";
             echo "</tr>";
         }
-    ?>
+
+        ?>
     </tr>
     </tbody>
 </table>

@@ -253,6 +253,6 @@ class admin_functions {
                 $month_record[$month] = 0;
             }
         }
-        return ;
+        return $month_record;
     }
 }

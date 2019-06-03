@@ -15,6 +15,7 @@
 <html>
 <body>
 <?php
+session_start();
 include_once '../common/config.php';
 include_once '../common/DBConnector.php';
 include_once 'user_functions.php';
@@ -38,6 +39,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             else {
 //                $url="user_main.php";
 //                echo "<script language=javascript>location.href='$url'</script>";
+                $_SESSION['UID'] = $username;
+                $_SESSION['PSW'] = $password;
                 echo " <form style='display:none;' id='form1' name='form1' method='post' action='user_main.php' >
                             <input name='username' type='text' value='{$username}' />
                             <input name='password' type='text' value='{$password}'>
