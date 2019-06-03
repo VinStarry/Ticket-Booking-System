@@ -54,19 +54,19 @@ class user_exception extends Exception {
             case user_exception_codes::TelTooLong:
                 return "Telephone too long.";
             case user_exception_codes::InsertAcconutFailed:
-                return "Insert into user account table falied, This mainly happens when the Server is busy";
+                return "Insert into user account table falied";
             case user_exception_codes::AccountNotExist:
                 return "Sorry, this Account do not exist";
             case user_exception_codes::IDInvalidFormat:
                 return "Invalid Format! ID can only be numbers";
             case user_exception_codes::SrcPlaceNotExist:
-                return "There are no flight coming from the city you search";
+                return "no flight coming from the search city";
             case user_exception_codes::DstPlaceNotExist:
-                return "There are no flight coming to the city you search";
+                return "no flight coming to the search city";
             case user_exception_codes::NoTargetFlight:
                 return "No flight satisfy all the conditions";
             case user_exception_codes::ServerBusy:
-                return "Operation failed, probably the server is busy or input is invalid, please contact the admin";
+                return "Server is busy or input is invalid";
             case user_exception_codes::TooLatetoDo:
                 return "It it too late";
             case user_exception_codes::AlreadyCanceled:
@@ -76,7 +76,7 @@ class user_exception extends Exception {
             case user_exception_codes::AlreadyGot:
                 return "The ticket is already got";
             case user_exception_codes::NotEnoughBalance:
-                return "Sorry, you don't enough balance to pay for the order";
+                return "Not enough balance to pay for the order";
             case user_exception_codes::CouldNotFindOrder:
                 return "Sorry, could not find the order";
             case user_exception_codes::HaventPaid:
@@ -552,8 +552,6 @@ final class User_functions {
                 }
             }
 
-            $result_rows->free();
-
             if (!$hasthis) {
                 throw new user_exception(user_exception_codes::CouldNotFindOrder);
             }
@@ -572,7 +570,7 @@ final class User_functions {
                     }
                     $cost2p = new decimal2P($cost);
                     $ublance = new decimal2P($usr->getUBalance());
-                    if($ublance->compare($cost2p) == false) {
+                    if((bool)($ublance->compare($cost2p)) == false) {
                         throw new user_exception(user_exception_codes::NotEnoughBalance);
                     }
                     else {
