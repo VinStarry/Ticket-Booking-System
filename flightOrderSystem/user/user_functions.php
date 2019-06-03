@@ -377,6 +377,9 @@ final class User_functions {
 
             do {
                 $target_date = date("Y-m-d",strtotime($offtime));
+                $link->autocommit(false);
+                $serializable = "set session transaction isolation level serializable;";
+                $link->query($serializable);
                 $spec_query = "select " . config\Flying_date_table::EDISCOUNT . "," .
                     config\Flying_date_table::CDISCOUNT . "," . config\Flying_date_table::FDISCOUNT . ",".
                     config\Flying_date_table::EPRICE . "," . config\Flying_date_table::CPRICE . "," .
@@ -432,7 +435,7 @@ final class User_functions {
                     continue;
                 }
 
-                $link->autocommit(false);
+
                 $oid_query = "select max(" . config\Order_table::ID . ")" .
                     " from " . config\Order_table::NAME . ";";
 
@@ -515,6 +518,8 @@ final class User_functions {
         }
         finally {
             $link->autocommit(true);
+            $serializable = "set session transaction isolation repeatable read;";
+            $link->query($serializable);
         }
     }
 

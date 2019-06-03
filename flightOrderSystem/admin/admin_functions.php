@@ -1,8 +1,5 @@
 <?php
 
-include_once '../common/Flight.php';
-include_once '../common/DBConnector.php';
-
 class admin_exception_codes {
     public const UNKNOWN = 0;
     public const FIDNotNumeric = 1;
@@ -63,7 +60,7 @@ class admin_functions {
      * and create airports codes' array
      */
     function __construct() {
-        $this->conn = new DBConnector();
+        $this->conn = new DBConnector(true);
         $this->airports = $this->conn->get_all_airports_code();
     }
 
@@ -207,17 +204,50 @@ class admin_functions {
 
     function delete_flying_date($fid, $cancel_date) {
         // TODO: at last --- 1
+        return ;
     }
 
     function list_data() {
-        // TODO: at last --- 2
+        try {
+            $query = "select * from ".config\Views::DATA_SEL . ";";
+//            echo "$query";
+            $result = $this->conn->link->query($query);
+            $ret = array();
+            while (list($f_date, $fid, $etaken, $ctaken, $ftaken, $revenue, $fn, $en, $cn) = $result->fetch_row()) {
+                $e_taken_rate = round((int)$etaken * 1.0 / (int)$en, 2) ;
+                $c_taken_rate = round((int)$ctaken * 1.0 / (int)$cn, 2) ;
+                $f_taken_rate = round((int)$ftaken * 1.0 / (int)$fn, 2) ;
+                $ret[] = array($f_date, $fid, $etaken, $ctaken, $ftaken, $revenue, $fn, $en, $cn, $e_taken_rate, $c_taken_rate, $f_taken_rate);
+            }
+            $result->free();
+//            var_dump($ret);
+            return $ret;
+        }
+        catch (mysqli_sql_exception $ex) {
+            throw $ex;
+        }
+        catch (Exception $ex) {
+            throw $ex;
+        }
     }
 
-    function show_revenue_by_day() {
-        // TODO: at last --- 3
-    }
-
-    function show_revenue_by_month() {
-        // TODO: at last --- 4
+    function show_revenue_by_month(array $data) {
+        if ($data == array()) {
+            return ;
+        }
+        $output = array();
+        $month_record = array();
+        for ($i = 0; $i < count($data); $i++) {
+            list($f_date, $fid, $etaken, $ctaken, $ftaken, $revenue, $fn, $en, $cn, $e_taken_rate, $c_taken_rate, $f_taken_rate)
+                = $data[$i];
+            $month = date("Y-m", strtotime($f_date));
+            if (array_key_exists($month, $month_record)) {
+                $month_record[$month] += $revenue;
+            }
+            else {
+                $month_record[$month] = 0;
+            }
+        }
+        return ;
     }
 }

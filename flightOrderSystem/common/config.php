@@ -105,4 +105,8 @@ final class Flying_date_table {
     public const REVENUE = "revenue";           // @datatype: decimal(11, 2) , default 0.00
 }
 
+final class Views {
+    public const DATA_SEL = "v1";
+}
+
 ?>
