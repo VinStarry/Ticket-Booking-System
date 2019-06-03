@@ -718,7 +718,7 @@ final class User_functions {
 
                             list($paid) = $result->fetch_row();
 //                            echo "$paid";
-                            if ($paid != null && (bool)$paid == true) {
+                            if ((bool)$paid == true) {
                                 // update ticket table
                                 $link->autocommit(false);
                                 $ctime = config\BJ_time::get_current_datetime();
