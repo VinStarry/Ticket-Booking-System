@@ -14,17 +14,19 @@
 </style>
 <html>
 <body>
-<?php
+<?php session_start();
 include_once '../common/config.php';
 include_once '../common/DBConnector.php';
 include_once 'user_functions.php';
 $username = $password = $signup = $login = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = test_input($_POST["username"]);
+    $username = test_input($_SESSION['UID']);
     $fid = test_input($_POST["fid"]);
-    $order_button = test_input($_POST["order_button"]);
     $in_date = test_input($_POST["in_date"]);
+    $src_city = $_POST['src_city'] ;
+    $dst_city = $_POST['des_city'];
+    $order_button = test_input($_POST["order_button"]);
     $seatclass = (string)test_input($_POST["q"]);
     $conn = new DBConnector(false);
 //    echo "$username, $fid, $order_button, $seatclass, $in_date";
@@ -58,6 +60,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         catch (Exception $ex) {
             echo "<script language=javascript>alert('$ex');</script>";
         }
+        finally {
+            $url = "user_main.php";
+            echo "<script language=javascript>location.href='$url'</script>";
+        }
     }
 }
 
@@ -68,13 +74,10 @@ function test_input($data) {
     return $data;
 }
 ?>
-<div class="divForm">
+<div style="text-align: center;margin-top: 100px">
     <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
         <p>
             欢迎登陆机票预订系统
-        </p>
-        <p>
-            账  户：<input type="text" name="username"/>
         </p>
         <p>
             飞机编号：<input type="text" name="fid"/>
@@ -87,7 +90,41 @@ function test_input($data) {
         <p>
             出发时间：<input type="date" name="in_date"/>
         </p>
+        <p>
         <input name="order_button" type="submit" value="预订"/>
+        </p>
+        <div style="text-align: center;margin-left: 130px">
+        <p>
+            <?php session_start();
+            $ret = User_functions::search_tickets($in_date, $src_city, $dst_city);
+            echo "<table border=\"2\">
+            <tr>
+                <th>飞机编号</th>
+                <th>机型</th>
+                <th>出发机场</th>
+                <th>目的机场</th>
+                <th>出发日期</th>
+                <th>出发时间</th>
+                <th>降落时间</th>
+                <th>经济舱价格</th>
+                <th>商务舱价格</th>
+                <th>头等舱价格</th>
+                <th>经济舱余票</th>
+                <th>商务舱余票</th>
+                <th>头等舱余票</th>
+            </tr>
+            ";
+            for ($i = 0; $i < count($ret); $i++) {
+                $temp = $ret[$i];
+                echo "<tr>";
+                for ($j = 0; $j < count($temp); $j++) {
+                    echo"<td>$temp[$j]</td>";
+                }
+                echo "</tr>";
+            }
+            ?>
+        </p>
+        </div>
     </form>
 </body>
 </div>

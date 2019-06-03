@@ -1,4 +1,18 @@
 <style type="text/css">
+    .divForm{
+        position: absolute;/*绝对定位*/
+        width: 300px;
+        height: 200px;
+
+        border: 1px solid red;
+        text-align: center;/*(让div中的内容居中)*/
+        top: 50%;
+        left: 50%;
+        margin-top: -200px;
+        margin-left: -150px;
+    }
+</style>
+<style type="text/css">
     .demo{width:760px; margin:20px auto 0 auto; height:70px;}
     .button {
         display: inline-block;
@@ -129,13 +143,14 @@
 </style>
 <html>
     <body>
-<?php
+<?php session_start();
 include_once '../common/config.php';
 include_once '../common/DBConnector.php';
 include_once 'user_functions.php';
 
 $uname = test_input($_SESSION["UID"]);
 $upsw =  test_input($_SESSION["PSW"]);
+$src_city = $dst_city = "";
 $conn = new DBConnector(false);
 $city_arr = array_unique($conn->get_city_from_code("", true));
 
@@ -147,8 +162,8 @@ function test_input($data) {
 }
 ?>
 
-<div style="text-align: center">
-    <form method="post">
+<div class="divForm">
+    <form method="post", action="order_ticket.php">
         <p>
                 机票预订功能块
         </p>
@@ -175,58 +190,28 @@ function test_input($data) {
         </p>
         <input name="signupok" type="submit" value="OK"/>
         <p>
-            <input class="button blue" type="button" value="查票订票" />
-            <input class="button blue" type="button" value="查询历史" />
-            <input class="button blue" type="button" value="充值业务" />
-        </p>
-        <p>
         <div style="text-align: center">
             <?php session_start();
             if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $src_city = test_input($_POST["src_city"]);
                 $dst_city = test_input($_POST["des_city"]);
-                $in_date = test_input($_POST["in_date"]);
+                $in_date =  test_input($_POST["in_date"]);
                 $signupok = test_input($_POST["signupok"]);
                 $uname = test_input($_SESSION["UID"]);
                 $upsw = test_input($_SESSION["PSW"]);
+                $order_b = test_input($_POST["order_b"]);
+
                 $seatclass = test_input($_POST["q"]);
-                echo "$uname, $upsw, $src_city, $dst_city, $in_date, $signupok, $seatclass <br >";
+
                 try {
                     if (!strcmp($signupok, "OK")) {
-                        $ret = User_functions::search_tickets($in_date, $src_city, $dst_city);
-                        echo "<table border=\"2\">
-                        <tr>
-                        <th>飞机编号</th>
-                        <th>机型</th>
-                        <th>出发机场</th>
-                        <th>目的机场</th>
-                        <th>出发日期</th>
-                        <th>出发时间</th>
-                        <th>降落时间</th>
-                        <th>经济舱价格</th>
-                        <th>商务舱价格</th>
-                        <th>头等舱价格</th>
-                        <th>经济舱余票</th>
-                        <th>商务舱余票</th>
-                        <th>头等舱余票</th>
-                        <th>购买经济舱</th>
-                        <th>购买商务舱</th>
-                        <th>购买头等舱</th>
-                        </tr>
-                        ";
-                        for ($i = 0; $i < count($ret); $i++) {
-                            $temp = $ret[$i];
-                            echo "<tr>";
-                            for ($j = 0; $j < count($temp); $j++) {
-                                echo"<td>$temp[$j]</td>";
-                            }
-                            echo "<th><input type=\"radio\" name=\"q\" value=\"E\" />E</th>
-                                <th><input type=\"radio\" name=\"q\" value=\"C\" />C</th>
-                                <th><input type=\"radio\" name=\"q\" value=\"F\" />F</th>";
-                            echo "</tr>";
-                        }
-                        echo "</table>";
-                        echo "<button name= \"order_b\" type='submit' >预订</button>";
+                        echo "$uname, $in_date, $signupok, $src_city, $dst_city <br >";
+                        $_SESSION['UID'] = $uname;
+                        $_SESSION['INDATE'] = $in_date;
+                        $_SESSION['FROMP'] = $src_city;
+                        $_SESSION['TOP'] = $dst_city;
+                        $url = "order_ticket.php";
+                        echo "<script language=javascript>location.href='$url'</script>";
                     }
                 }
                 catch (mysqli_sql_exception $ex) {
