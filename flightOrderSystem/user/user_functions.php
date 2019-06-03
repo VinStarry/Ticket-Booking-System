@@ -32,6 +32,7 @@ class user_exception_codes {
     public const HaventPaid = 17;
     public const TooEarly = 18;
     public const SeatsSoldOut = 19;
+    public const CouldNotFindTicket = 20;
 }
 
 class user_exception extends Exception {
@@ -84,6 +85,8 @@ class user_exception extends Exception {
                 return "To early to do this";
             case user_exception_codes::SeatsSoldOut:
                 return "Sorry, this type of tickets are sold out";
+            case user_exception_codes::CouldNotFindTicket:
+                return "Sorry, coudln't find this ticket";
             default:
                 return "Some user exception occurred.";
         }
@@ -533,7 +536,9 @@ final class User_functions {
             $result_rows = $link->query($select_order);
 
             $satisfied = true;
+            $hasthis = false;
             while (list($canceled, $offtime) = $result_rows->fetch_row()) {
+                $hasthis = true;
                 if ((bool)$canceled == true) {
                     throw new user_exception(user_exception_codes::AlreadyCanceled);
                 }
@@ -544,6 +549,9 @@ final class User_functions {
 
             $result_rows->free();
 
+            if (!$hasthis) {
+                throw new user_exception(user_exception_codes::CouldNotFindOrder);
+            }
             if (!$satisfied) {
                 throw new user_exception(user_exception_codes::TooLatetoDo);
             }
@@ -767,6 +775,7 @@ final class User_functions {
                 $tic_search = "select ".config\Ticket_table::OID.",".config\Ticket_table::CANCELED.",".config\Ticket_table::GOT_TIME.","
                     .config\Ticket_table::TOOKOFF_TIME.",".config\Ticket_table::FID.",".config\Ticket_table::SEATCLAS.",".config\Ticket_table::PRICE.
                     " from ".config\Ticket_table::NAME." where ".config\Ticket_table::ID." = $tid;";
+//                echo $tic_search;
                 $tic_result = $link->query($tic_search);
 
                 if (list($oid, $canceled, $gtime, $offtime, $fid, $seat_class, $price) = $tic_result->fetch_row()) {
@@ -775,10 +784,10 @@ final class User_functions {
                     if ($gtime != null) {
                         throw new user_exception(user_exception_codes::AlreadyGot);
                     }
-                    else if(strtotime($curtime) > strtotime($offtime)) {
+                    if(strtotime($curtime) > strtotime($offtime)) {
                         throw new user_exception(user_exception_codes::TooLatetoDo);
                     }
-                    else if ((bool)$canceled == true) {
+                    if ((bool)$canceled == true) {
                         throw new user_exception(user_exception_codes::AlreadyCanceled);
                     }
                     else {
@@ -818,14 +827,23 @@ final class User_functions {
                                         $link->query($refund, MYSQLI_STORE_RESULT);
                                         if ($link->affected_rows > 0) {
                                             $link->commit();
-                                            $succeeded = true;
                                             break;
                                         }
+                                    }
+                                    else {
+                                        $link->commit();
+                                        break;
                                     }
                                 }
                             }
                         }
+                        else {
+                            throw new user_exception(user_exception_codes::CouldNotFindTicket);
+                        }
                     }
+                }
+                else {
+                    throw new user_exception(user_exception_codes::CouldNotFindTicket);
                 }
 
             }while($try_times--);
@@ -838,9 +856,6 @@ final class User_functions {
             throw $ex;
         }
         catch (user_exception $ex) {
-            throw $ex;
-        }
-        catch (Exception $ex) {
             throw $ex;
         }
         finally {

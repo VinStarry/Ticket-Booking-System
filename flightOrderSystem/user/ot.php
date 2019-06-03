@@ -45,7 +45,7 @@ function test_input($data) {
             <input type="radio" name="q" value="take" />取票
         </p>
         <p>
-            <input type="radio" name="" value="cancel" />退票
+            <input type="radio" name="q" value="cancel" />退票
         </p>
         </p>
         <input name="order_button" type="submit" value="确定"/>
@@ -74,10 +74,12 @@ function test_input($data) {
                                 echo "<script language=javascript>alert('付费成功');</script>";
                             }
                             else if (!strcmp($sel, "take")) {
-
+                                User_functions::take_ticket($conn->link, $user, $otid);
+                                echo "<script language=javascript>alert('取票成功');</script>";
                             }
                             else if (!strcmp($sel, "cancel")) {
-
+                                User_functions::cancel_ticket($conn->link, $user, $otid);
+//                                echo "<script language=javascript>alert('退票成功');</script>";
                             }
                             else {
                                 echo "<script language=javascript>alert('请选择一项操作');</script>";
@@ -119,9 +121,6 @@ function test_input($data) {
                         echo "<script language=javascript>alert('$ex');</script>";
                     }
                     catch (mysqli_sql_exception $ex) {
-                        echo "<script language=javascript>alert('$ex');</script>";
-                    }
-                    catch (Exception $ex) {
                         echo "<script language=javascript>alert('$ex');</script>";
                     }
                 }
