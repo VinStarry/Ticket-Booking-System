@@ -127,7 +127,6 @@
     }
 
 </style>
-
 <style type="text/css">
     .divForm{
         position: absolute;/*绝对定位*/
@@ -142,21 +141,91 @@
         margin-left: -150px;
     }
 </style>
-
 <html>
-<div style="text-align: center;margin-top: 200px">
-    <body>
+<body>
+<?php
+include_once '../common/config.php';
+include_once '../common/DBConnector.php';
+include_once 'admin_functions.php';
+$username = $password = $tel = $signupok = "";
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $fid = test_input($_POST["fid"]);
+    $fdate = test_input($_POST["fdate"]);
+    $signupok = test_input($_POST["signupok"]);
+    $conn = new DBConnector(false);
+    if (!strcmp($signupok, "OK")) {
+        try {
+            $conn = new DBConnector();
+            $query = "select f_FID from flying_date where f_FID = $fid and f_date = '$fdate';";
+            $serializable = "set session transaction isolation level serializable;";
+            $conn->link->query($serializable);
+            $conn->link->autocommit(false);
+            $result = $conn->link->query($query);
+
+            if (list($tempfid) = $result->fetch_row()) {
+                $query = "select T_CANCELED, T_OID, T_PRICE from ticket_t where T_FID = $fid and date(T_TOKEOFFTIME) = '$fdate';";
+                $result = $conn->link->query($query);
+                while (list($tcanceled, $toid, $tprice) = $result->fetch_row()) {
+                    if ((bool)$tcanceled == false) {
+                        $tempq = "select O_PAID, O_UID from Order_t where O_ID = $toid";
+                        if (list($opaid, $ouid) = $tempq) {
+                            $refund = $conn->link->query("update User_t set U_BALANCE = U_BALANCE + $tprice where U_ID = $ouid;", MYSQLI_STORE_RESULT);
+                            if ($conn->link->affected_rows != 1) {
+                                throw new admin_exception(admin_exception_codes::UNKNOWN);
+                            }
+                        }
+                    }
+                }
+
+                $delete_query = "delete from Flying_date where f_FID = $fid and f_date = '$fdate';";
+                $conn->link->query($delete_query);
+                $conn->link->commit();
+                echo "<script language=javascript>alert('删除成功!');</script>";
+            }
+            else {
+                throw new admin_exception(admin_exception_codes::NoSuchFlight);
+            }
+        }
+        catch (admin_exception $ex) {
+            echo "<script language=javascript>alert('$ex');</script>";
+        }
+        catch (mysqli_sql_exception $ex) {
+            echo "<script language=javascript>alert('$ex');</script>";
+        }
+        finally {
+            $conn->link->autocommit(true);
+            $serializable = "set session transaction isolation repeatable read;";
+            $conn->link->query($serializable);
+        }
+    }
+}
+
+function test_input($data) {
+    $data = trim($data);
+    $data = stripslashes($data);
+    $data = htmlspecialchars($data);
+    return $data;
+}
+?>
+<div class="divForm">
+    <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
         <p>
-            欢迎登陆机票管理员系统
+            飞行计划取消模块
         </p>
-        <div class="demo">
-            <a href="add_flight.php" class="button blue bigrounded" >添加航班</a>
-            <a href="add_flying_time.php" class="button blue bigrounded">飞行计划</a>
-            <a href="satistic.php" class="button blue bigrounded">上座统计</a>
-            <a href="show_revenue.php" class="button blue bigrounded">营收统计</a>
-            <a href="cancel_date.php" class="button blue bigrounded">取消飞行</a>
+        <p>
+            飞机编号：<input type="number" name="fid"/>
+        </p>
+        <p>
+            飞行日期：<input type="date" name="fdate"/>
+        </p>
+        <input name="signupok" type="submit" value="OK"/>
+        <p>
+            <div class="demo">
+            <a href="home.php" class="button blue bigrounded" >返回</a>
         </div>
-    </body>
+        </p>
+    </form>
+</body>
 </div>
 </html>
-

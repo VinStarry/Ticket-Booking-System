@@ -18,6 +18,7 @@ class admin_exception_codes {
     public const AddFlightDateFailed = 6;
     public const TimeLogicError = 7;
     public const DiscountNotNumeric = 8;
+    public const NoSuchFlight = 9;
 }
 
 class admin_exception extends Exception {
@@ -38,17 +39,19 @@ class admin_exception extends Exception {
             case admin_exception_codes::SeatsNotNumeric:
                 return "Seats not numeric!";
             case admin_exception_codes::FIDAlreadyExist:
-                return "This FID already exists, please check carefully.";
+                return "This FID already exists";
             case admin_exception_codes::InsertFlightFailed:
-                return "Falied too many times, probably the server is busy, or some input error occurred.";
+                return "Server is busy, or some input error occurred.";
             case admin_exception_codes::InvalidSeatsParam:
-                return "The parameter you set for seats is not in correct format";
+                return "Incorrect Format";
             case admin_exception_codes::AddFlightDateFailed:
-                return "Failed to add flight date,  probably the server is busy, or some input error occurred.";
+                return "Failed to add flight date.";
             case admin_exception_codes::TimeLogicError:
-                return "Begin time before begin service time or end time later than end service time";
+                return "Time conflicts";
             case admin_exception_codes::DiscountNotNumeric:
                 return "Discount is not numeric";
+            case admin_exception_codes::NoSuchFlight:
+                return "No such flight";
             default:
                 return "Some admin exception occurred.";
         }
