@@ -283,7 +283,7 @@ class admin_functions {
                 $month_record[$month] += $revenue;
             }
             else {
-                $month_record[$month] = 0;
+                $month_record[$month] = $revenue;
             }
         }
         return $month_record;
