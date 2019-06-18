@@ -2,42 +2,57 @@
 namespace config;
 
 final class BJ_time {
+    /**
+     * get current datetime of Beijing
+     */
     public static function get_current_datetime() {
         return date("Y-m-d H:i:s", time()+8*3600) ;
     }
+
+    /**
+     * get current time of Beijing
+     */
 
     public static function get_current_time() {
         return date("H:i:s", time()+8*3600) ;
     }
 
+    /**
+     * get current date of Beijing
+     */
+
     public static function get_current_date() {
         return date("Y-m-d", time()+8*3600) ;
     }
+
+     /**
+     * Limitation: when you order a ticket, the flight should not take off within 3 hours.
+     *             In other words, you can only order a flight that takes off later than 3 hours
+     *              from the time being
+     */
 
     public static function get_limited_datetime() {
         return date("Y-m-d H:i:s", time()+11*3600) ;
     }
 }
 
-final class DB_info {
-    public const SERVER_ADDRESS = "127.0.0.1";
-    public const DATABASE_ADMIN_NAME = "seller";
-    public const DATABASE_ADMIN_PSW = "123456";
-    public const DATABASE_NAME = "ticket";
-    public const DATABASE_COSTUMER_NAME = "customer";
-    public const DATABASE_COSTUMER_PSW = "123456";
+final class DB_info {   // Basic information about Database
+    public const SERVER_ADDRESS = "127.0.0.1";       // Server address of the database 
+    public const DATABASE_ADMIN_NAME = "seller";     // Admin user use this user name to login in to the DB
+    public const DATABASE_ADMIN_PSW = "123456";      // Password of the admin user
+    public const DATABASE_NAME = "ticket";           // The name of the schema
+    public const DATABASE_COSTUMER_NAME = "customer";// Customer use thie user name to login in to the DB
+    public const DATABASE_COSTUMER_PSW = "123456";   // Password of customers
 }
 
-final class Code_CITY {
-    // Code to Address and City
-    public const NAME = "code_addr";
+final class Code_CITY {     // Code to Address and City
+    public const NAME = "code_addr";        // Name of the table
     public const CODE = "AP_CODE";          // primary key, @datatype: char(3)
     public const AP_NAME = "AP_NAME";       // @datatype: char(50)
     public const CITY = "AP_CITY";          // @datatype: char(20)
 }
 
-final class User_table {
-    // User table
+final class User_table {    // User table
     public const NAME = "User_t";
     public const ID = "U_ID";               // primary key, @datatype: int
     public const PASSWORD = "U_PASSWORD";   // @datatype: char(30)
@@ -46,8 +61,7 @@ final class User_table {
     public const BALANCE = "U_BALANCE";     // @datatype: decimal(8,2)
 }
 
-final class Order_table {
-    // Order table
+final class Order_table {   // Order table
     public const NAME = "Order_t";
     public const ID = "O_ID";       // primary key, @datatype: char(30)
     public const UID = "O_UID";     // foreign key from User table
@@ -57,8 +71,7 @@ final class Order_table {
     public const COST = "O_COST";   // @datatype: decimal(8,2)
 }
 
-final class Flight_table {
-    // Flight table
+final class Flight_table {  // Flight table
     public const NAME = "Flight_t";
     public const ID = "F_ID";                   // primary key, @datatype: int
     public const TYPE = "F_TYPE";               // @datatype: char(10)
@@ -73,8 +86,7 @@ final class Flight_table {
     public const ESEAT_NUMBER = "CSEAT_NUMBER";       // @datatype: int
 }
 
-final class Ticket_table {
-    // Ticket table
+final class Ticket_table {  // Ticket table
     public const NAME = "Ticket_t";
     public const ID = "T_ID";                   // primary key @datatype: int
     public const OID = "T_OID";                 // foreign key from Order table
@@ -88,8 +100,7 @@ final class Ticket_table {
     public const PRICE = "T_PRICE";             // @datatype: decimal(8,2)
 }
 
-final class Flying_date_table {
-    // Flying date table
+final class Flying_date_table { // Flying date table
     public const NAME = "Flying_date";
     public const FDATE = "f_date";              // @datatype: date, part of priamry key
     public const FID = "f_FID";                 // @datatype: int, part of priamry key
@@ -105,8 +116,8 @@ final class Flying_date_table {
     public const REVENUE = "revenue";           // @datatype: decimal(11, 2) , default 0.00
 }
 
-final class Views {
-    public const DATA_SEL = "v1";
+final class Views {     // Names of Views
+    public const DATA_SEL = "v1";               // Select data from Flying date table and Flight table
 }
 
 ?>
