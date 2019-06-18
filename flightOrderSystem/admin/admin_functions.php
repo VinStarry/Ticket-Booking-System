@@ -75,19 +75,42 @@ class admin_functions {
     }
 
     /**
+     * admin_functions destructor
+     * close link()
+     */
+    function __destruct() {
+        $this->conn->link->close();
+    }
+
+    /**
      * PAY ATTENTION to ERROR HANDLE and INPUT CHECK
      * @params basic information about flight
      *  this should always create seats for flight
+     * @throws admin_exception
+     */
+    /**
+     * add a flight specified by the params below
+     * @param $fid
+     * @param $f_type
+     * @param $depart_time
+     * @param $duration
+     * @param $depart_place
+     * @param $arrive_place
+     * @param $begin_service_date
+     * @param $end_service_date
+     * @param $fnum
+     * @param $enum
+     * @param $cnum
      * @throws admin_exception
      */
     function add_flight($fid, $f_type, $depart_time,
                         $duration, $depart_place, $arrive_place,
                         $begin_service_date, $end_service_date,
                         $fnum, $enum, $cnum) {
+        // instantiate a flight object
         $new_flight = new Flight($fid, $f_type, $depart_time,
             $duration, $depart_place, $arrive_place,
             $begin_service_date, $end_service_date, $fnum, $enum, $cnum);
-
 
         /* input parameters tests */
         try {
@@ -101,6 +124,7 @@ class admin_functions {
                 throw new admin_exception(admin_exception_codes::SeatsNotNumeric);
             }
             else {
+                // add a new flight
                 $search_fid = "select " . config\Flight_table::ID .
                     " from " . config\Flight_table::NAME .
                     " where " . config\Flight_table::ID . " = " . $fid;
@@ -133,7 +157,6 @@ class admin_functions {
             }
         }
         catch (mysqli_sql_exception $ex) {
-//            echo $ex . "<br />";
             throw $ex;
         }
         catch (admin_exception $ex) {
@@ -162,6 +185,7 @@ class admin_functions {
             $eprice = new decimal2P($E_seat_price);
             $cprice = new decimal2P($C_seat_price);
             $fprice = new decimal2P($F_seat_price);
+            /* search for the specific flight */
             $search_fid = "select " . config\Flight_table::ID . "," . config\Flight_table::BEGIN_SERVICE
                 .",". config\Flight_table::END_SERVICE .
                 " from " . config\Flight_table::NAME .
@@ -169,17 +193,20 @@ class admin_functions {
 
             $result = $this->conn->link->query($search_fid);
             list($rfid, $rbtime, $retime) = $result->fetch_row();
-//            echo $search_fid . "<br />";
             if ($rfid == null) {
+                /* flight not exists */
                 throw new admin_exception(admin_exception_codes::FIDAlreadyExist);
             }
             else if(strtotime($begin_date) < strtotime($rbtime) || strtotime($end_date) > strtotime($retime)) {
+                /* Time logic error test */
                 throw new admin_exception(admin_exception_codes::TimeLogicError);
             }
             else if(!is_numeric($edis) || !is_numeric($cdis) || !is_numeric($fdis)) {
+                /* Input validation */
                 throw new admin_exception(admin_exception_codes::DiscountNotNumeric);
             }
             else if (($eprice->showMoney() == null) || ($cprice->showMoney() == null) || ($fprice->showMoney() == null)) {
+                /* Input validation */
                 throw new admin_exception(admin_exception_codes::InvalidSeatsParam);
             }
             $retry_times =  self::RETRY_TIMES;
@@ -190,7 +217,6 @@ class admin_functions {
                     $insert_flying_date = "insert into " . config\Flying_date_table::NAME . " values(" .
                         "'". date("Y-m-d", strtotime($t)). "'," . $fid .",". $edis .",". $cdis . "," . $fdis .
                         "," . $eprice . "," . $cprice . "," . $fprice . ",0,0,0,0.00);";
-//                    echo $insert_flying_date . "<br />";
                     $this->conn->link->query($insert_flying_date, MYSQLI_STORE_RESULT);
                     $cnt += $this->conn->link->affected_rows;
                     $t = date("Y-m-d", strtotime("+$interval_days day", strtotime($t)));
@@ -212,11 +238,11 @@ class admin_functions {
         }
     }
 
-//    function delete_flying_date($fid, $cancel_date) {
-//
-//        return ;
-//    }
-
+    /**
+     * do statistics on the table
+     * @return array the data stored in array
+     * @throws Exception
+     */
     function list_data() {
         try {
             $query = "select * from ".config\Views::DATA_SEL . ";";
@@ -239,11 +265,15 @@ class admin_functions {
         }
     }
 
+    /**
+     * calculation of monthly revenue
+     * @param array $data   data stored in array
+     * @return array|void
+     */
     function show_revenue_by_month(array $data) {
         if ($data == array()) {
             return ;
         }
-        $output = array();
         $month_record = array();
         for ($i = 0; $i < count($data); $i++) {
             list($f_date, $fid, $etaken, $ctaken, $ftaken, $revenue, $fn, $en, $cn, $e_taken_rate, $c_taken_rate, $f_taken_rate)
