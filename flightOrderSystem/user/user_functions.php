@@ -380,6 +380,10 @@ final class User_functions {
                 $serializable = "set session transaction isolation level serializable;";
                 $link->query($serializable);
                 $link->autocommit(false);
+
+                /* First, get specific information about the flight
+                    It is important to know whether the ticket had been sold out
+                 */
                 $spec_query = "select " . config\Flying_date_table::EDISCOUNT . "," .
                     config\Flying_date_table::CDISCOUNT . "," . config\Flying_date_table::FDISCOUNT . ",".
                     config\Flying_date_table::EPRICE . "," . config\Flying_date_table::CPRICE . "," .
@@ -390,7 +394,7 @@ final class User_functions {
                     " and " . config\Flying_date_table::FDATE . "=" . "'" . $target_date . "';";
 
                 $final_price = null;
-
+                /* have seats left? */
                 $flight_query = "select " .
                     config\Flight_table::FSEAT_NUMBER . "," . config\Flight_table::CSEAT_NUMBER . "," .
                     config\Flight_table::ESEAT_NUMBER .
@@ -401,7 +405,7 @@ final class User_functions {
                     continue;
                 }
                 $tar = $link->query($spec_query);
-//                echo $spec_query;
+                /* Get price of the ticket */
                 if (list($edis, $cdis, $fdis, $ep, $cp, $fp, $et, $ct, $ft) = $tar->fetch_row()) {
                     if ($seat_class == 'E') {
                         if ((int)$et == (int)$fen) {
@@ -410,7 +414,6 @@ final class User_functions {
                         $e_final_price = new decimal2P((string)$ep);
                         $e_final_price->multiply_discount($edis);
                         $final_price = $e_final_price;
-//                        echo $e_final_price;
                     }
                     else if ($seat_class == 'C') {
                         if ((int)$ct == (int)$fcn) {
@@ -419,7 +422,6 @@ final class User_functions {
                         $c_final_price = new decimal2P($cp);
                         $c_final_price->multiply_discount($cdis);
                         $final_price = $c_final_price;
-//                        echo $c_final_price;
                     }
                     else {
                         if ((int)$ft == (int)$ffn) {
@@ -428,14 +430,13 @@ final class User_functions {
                         $f_final_price = new decimal2P($fp);
                         $f_final_price->multiply_discount($fdis);
                         $final_price = $f_final_price;
-//                        echo $f_final_price;
                     }
                 }
                 else {
                     continue;
                 }
 
-
+                /* Generate an order number */
                 $oid_query = "select max(" . config\Order_table::ID . ")" .
                     " from " . config\Order_table::NAME . ";";
 
@@ -450,9 +451,10 @@ final class User_functions {
 
                 list($oid) = $oid_result->fetch_row();
                 $oid = ($oid == null) ? 90001 : $oid + 1;
+                /* Generate an order (Insert) */
                 $insert_order = "insert into " . config\Order_table::NAME . " values(" .
                                 "$oid, $uid, '$cur_time', false, '$final_price');";
-//                echo "$insert_order";
+
                 $link->query($insert_order, MYSQLI_STORE_RESULT);
                 if ($link->affected_rows > 0) {
                     $tid_query = "select max(" . config\Ticket_table::ID . ")" .
@@ -460,18 +462,18 @@ final class User_functions {
 
                     $tid_result = $link->query($tid_query);
                     list($tid) = $tid_result->fetch_row();
+                    /* Generate a ticket number */
                     $tid = ($tid == null) ? 120001 : $tid + 1;
+                    /* Generate a ticket (Insert) */
                     $insert_ticket = "insert into " . config\Ticket_table::NAME . " values(" .
                         "$tid, $oid, false, null, '$offtime', $fid, '$seat_class', '$final_price');";
 
-//                    echo $insert_ticket;
                     $link->query($insert_ticket, MYSQLI_STORE_RESULT);
 
                     if ($link->affected_rows > 0) {
                         $update_seats = "";
                         $off_date = date("Y-m-d",strtotime($offtime));
                         if ($seat_class == 'E') {
-//                            $update_seats = "update Flying_date set e_taken = e_taken + 1 where f_date = '2019-08-31' and f_FID = 351;"
                             $update_seats = "update ".config\Flying_date_table::NAME." set ".config\Flying_date_table::ETAKEN." = ".config\Flying_date_table::ETAKEN." + 1".
                                 " where f_date = '$off_date' and f_FID = '$fid';";
                         }
@@ -483,7 +485,6 @@ final class User_functions {
                             $update_seats = "update ".config\Flying_date_table::NAME." set ".config\Flying_date_table::FTAKEN." = ".config\Flying_date_table::FTAKEN." + 1".
                                 " where f_date = '$off_date' and f_FID = '$fid';";
                         }
-//                        echo $update_seats. "<br />";
                         $link->query($update_seats, MYSQLI_STORE_RESULT);
                         if($link->affected_rows > 0) {
                             $succeeded = true;
@@ -532,16 +533,16 @@ final class User_functions {
      */
     public static function pay_for_orders(mysqli &$link, flight_User &$usr, $oid) {
         try {
-            $succeeded = false;
+            /* Get Canceled, tookoff_time and some informations */
             $select_order = "select ".config\Ticket_table::CANCELED . "," .
                 config\Ticket_table::TOOKOFF_TIME .
                 " from " . config\Ticket_table::NAME .
                 " where " . config\Ticket_table::OID . "=" . $oid . ";";
-//            echo $select_order;
             $result_rows = $link->query($select_order);
 
             $satisfied = true;
             $hasthis = false;
+            /* Test whether this order has been canceld */
             while (list($canceled, $offtime) = $result_rows->fetch_row()) {
                 $hasthis = true;
                 if ((bool)$canceled == true) {
@@ -559,22 +560,26 @@ final class User_functions {
                 throw new user_exception(user_exception_codes::TooLatetoDo);
             }
             else {
+                /* Get order specific information about whether it has been paid and the cost */
                 $select_order = "select " .config\Order_table::PAID . "," .
                     config\Order_table::COST . " from " . config\Order_table::NAME .
                     " where " . config\Order_table::ID . " = " . $oid . ";";
                 $result_rows = $link->query($select_order);
 
                 if (list($paid, $cost) = $result_rows->fetch_row()) {
+                    /* Test whether the order has been paid */
                     if ((bool)$paid == true) {
                         throw new user_exception(user_exception_codes::AlreadyPaid);
                     }
                     $cost2p = new decimal2P($cost);
                     $ublance = new decimal2P($usr->getUBalance());
+                    /* if balance is enough to pay for the order */
                     if((bool)($ublance->compare($cost2p)) == false) {
                         throw new user_exception(user_exception_codes::NotEnoughBalance);
                     }
                     else {
                         $link->autocommit(false);
+                        /* Update information of the order */
                         $update_query = "update " . config\Order_table::NAME .
                             " set " . config\Order_table::PAID . " = true" .
                             " where " . config\Order_table::ID . " = " . $oid . ";";
@@ -583,6 +588,7 @@ final class User_functions {
 
                         if ($link->affected_rows > 0) {
                             $usr->decBalance($cost);
+                            /* Update user's balance */
                             $update_query = "update " . config\User_table::NAME .
                                 " set " . config\User_table::BALANCE . " = " .$usr->getUBalance() .
                                 " where " . config\User_table::ID . " = " . $usr->UID . ";";
@@ -590,7 +596,6 @@ final class User_functions {
 
                             if ($link->affected_rows > 0) {
                                 $link->commit();
-                                $succeeded = true;
                             }
                             else {
                                 $usr->incBalance($cost);
@@ -625,59 +630,6 @@ final class User_functions {
     }
 
     /**
-     * add balance to account
-     * @param mysqli $link
-     * @param flight_User $usr
-     * @param string $money     the money add to the account
-     * @throws user_exception
-     * Generate a new decimal2P object for money
-     */
-    public static function add_balance(mysqli &$link, flight_User &$usr, string $money) {
-        // in UI, it needs user to choose, 100.00, 500.00, 1000.00, 5000.00
-        try {
-            $link->autocommit(false);
-            $add_money = new decimal2P($money);
-            $query = "update ". config\User_table::NAME .
-                     " set " . config\User_table::BALANCE ."=" .  config\User_table::BALANCE ."+" .$add_money.
-                     " where " . config\User_table::ID. "=". $usr->UID  .";";
-
-            $try_times = self::RETRY_TIMES;
-            $succeed = false;
-
-            do {
-                $link->query($query, MYSQLI_STORE_RESULT);
-                if ($link->affected_rows > 0) {
-                    $succeed = true;
-                    $link->commit();
-                    break;
-                }
-                else {
-                    $link->rollback();
-                }
-            }while($try_times--);
-
-            if ($try_times == 0 && $succeed == false) {
-                throw new user_exception(user_exception_codes::ServerBusy);
-            }
-            else {
-                $usr->incBalance($money);
-            }
-        }
-        catch (mysqli_sql_exception $ex) {
-            throw $ex;
-        }
-        catch (user_exception $ex) {
-            throw $ex;
-        }
-        catch (Exception $ex) {
-            throw $ex;
-        }
-        finally {
-            $link->autocommit(true);
-        }
-    }
-
-    /**
      * Take ticket based on a specific tid
      * @param mysqli $link
      * @param flight_User $usr
@@ -694,32 +646,32 @@ final class User_functions {
                     config\Ticket_table::GOT_TIME . "," . config\Ticket_table::TOOKOFF_TIME .
                     " from " . config\Ticket_table::NAME . " where " . config\Ticket_table::ID . " = " . $tid . ";";
 
-//                echo $tic_search;
+                /* Search for the specific ticket */
                 $tic_result = $link->query($tic_search);
 
                 if (list($oid, $canceled, $gott, $offt) = $tic_result->fetch_row()) {
-//                    echo "$oid, $canceled, $gott, $offt <br />";
+                    /* Test whether the ticket has been already canceled */
                     if ((bool)$canceled == true) {
                         throw new user_exception(user_exception_codes::AlreadyCanceled);
                     }
+                    /* Test whether the ticket has been taken*/
                     else if ($gott != null) {
                         throw new user_exception(user_exception_codes::AlreadyGot);
                     }
                     else {
                         $cur_t_plus_24h = strtotime("+24 hour", strtotime(config\BJ_time::get_current_datetime()));
+                        /* Whether it has surpass the ticket-taken time */
                         if (strtotime($offt) > $cur_t_plus_24h) {
                             throw new user_exception(user_exception_codes::TooEarly);
                         }
                         else {
                             $order_search = "select ".config\Order_table::PAID.
                                 " from ".config\Order_table::NAME." where ".config\Order_table::ID." = ".$oid.";";
-//                            echo "$order_search <br />";
                             $result = $link->query($order_search);
 
                             list($paid) = $result->fetch_row();
-//                            echo "$paid";
                             if ((bool)$paid == true) {
-                                // update ticket table
+                                /* update ticket table */
                                 $link->autocommit(false);
                                 $ctime = config\BJ_time::get_current_datetime();
                                 $update_query = "update ".config\Ticket_table::NAME.
@@ -779,21 +731,23 @@ final class User_functions {
             $succeeded = false;
 
             do {
+                /* Get specific info for the ticket */
                 $tic_search = "select ".config\Ticket_table::OID.",".config\Ticket_table::CANCELED.",".config\Ticket_table::GOT_TIME.","
                     .config\Ticket_table::TOOKOFF_TIME.",".config\Ticket_table::FID.",".config\Ticket_table::SEATCLAS.",".config\Ticket_table::PRICE.
                     " from ".config\Ticket_table::NAME." where ".config\Ticket_table::ID." = $tid;";
-//                echo $tic_search;
                 $tic_result = $link->query($tic_search);
 
                 if (list($oid, $canceled, $gtime, $offtime, $fid, $seat_class, $price) = $tic_result->fetch_row()) {
-//                    echo "$oid, $canceled, $gtime, $offtime, $fid, $seat_class, $price <br />";
                     $curtime = config\BJ_time::get_current_datetime();
+                    /* Already Got? */
                     if ($gtime != null) {
                         throw new user_exception(user_exception_codes::AlreadyGot);
                     }
+                    /* Already took off? */
                     if(strtotime($curtime) > strtotime($offtime)) {
                         throw new user_exception(user_exception_codes::TooLatetoDo);
                     }
+                    /* Already canceled? */
                     if ((bool)$canceled == true) {
                         throw new user_exception(user_exception_codes::AlreadyCanceled);
                     }
@@ -805,9 +759,7 @@ final class User_functions {
                         if (list($alpaid) = $paid_result->fetch_row()) {
                             $link->autocommit(false);
                             $off_date = date("Y-m-d",strtotime( $offtime));
-                            $update_seats = "";
                             if ($seat_class == 'E') {
-//                            $update_seats = "update Flying_date set e_taken = e_taken - 1 where f_date = '2019-08-31' and f_FID = 351;"
                                 $update_seats = "update ".config\Flying_date_table::NAME." set ".config\Flying_date_table::ETAKEN." = ".config\Flying_date_table::ETAKEN." - 1".
                                     " where f_date = '$off_date' and f_FID = '$fid';";
                             }
@@ -820,17 +772,16 @@ final class User_functions {
                                     " where f_date = '$off_date' and f_FID = '$fid';";
                             }
                             $link->query($update_seats, MYSQLI_STORE_RESULT);
+                            /* if the ticket is already paid, the customer should get refund */
                             if ($link->affected_rows > 0) {
                                 $reg_cancel = "update ".config\Ticket_table::NAME.
                                     " set ".config\Ticket_table::CANCELED." = true where ".config\Ticket_table::ID." = $tid;";
                                 $link->query($reg_cancel, MYSQLI_STORE_RESULT);
-//                                echo $reg_cancel . "<br />";
                                 if ($link->affected_rows > 0) {
                                     if ((bool)$alpaid == true) {
                                         $refund = "update ".config\User_table::NAME.
                                             " set ".config\User_table::BALANCE." = ".config\User_table::BALANCE.
                                             " + $price where ".config\User_table::ID." = $usr->UID;";
-//                                        echo $refund . "<br />";
                                         $link->query($refund, MYSQLI_STORE_RESULT);
                                         if ($link->affected_rows > 0) {
                                             $link->commit();
@@ -931,6 +882,59 @@ final class User_functions {
         }
         catch (Exception $ex) {
             throw $ex;
+        }
+    }
+
+    /**
+     * add balance to account
+     * @param mysqli $link
+     * @param flight_User $usr
+     * @param string $money     the money add to the account
+     * @throws user_exception
+     * Generate a new decimal2P object for money
+     */
+    public static function add_balance(mysqli &$link, flight_User &$usr, string $money) {
+        // in UI, it needs user to choose, 100.00, 500.00, 1000.00, 5000.00
+        try {
+            $link->autocommit(false);
+            $add_money = new decimal2P($money);
+            $query = "update ". config\User_table::NAME .
+                " set " . config\User_table::BALANCE ."=" .  config\User_table::BALANCE ."+" .$add_money.
+                " where " . config\User_table::ID. "=". $usr->UID  .";";
+
+            $try_times = self::RETRY_TIMES;
+            $succeed = false;
+
+            do {
+                $link->query($query, MYSQLI_STORE_RESULT);
+                if ($link->affected_rows > 0) {
+                    $succeed = true;
+                    $link->commit();
+                    break;
+                }
+                else {
+                    $link->rollback();
+                }
+            }while($try_times--);
+
+            if ($try_times == 0 && $succeed == false) {
+                throw new user_exception(user_exception_codes::ServerBusy);
+            }
+            else {
+                $usr->incBalance($money);
+            }
+        }
+        catch (mysqli_sql_exception $ex) {
+            throw $ex;
+        }
+        catch (user_exception $ex) {
+            throw $ex;
+        }
+        catch (Exception $ex) {
+            throw $ex;
+        }
+        finally {
+            $link->autocommit(true);
         }
     }
 }
