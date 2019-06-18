@@ -914,6 +914,13 @@ final class User_functions {
         }
     }
 
+    /**
+     * get flying time of a specific flight
+     * @param mysqli $link
+     * @param $fid
+     * @return mixed
+     * @throws Exception
+     */
     public static function get_flying_time(mysqli &$link, $fid) {
         try {
             $query = "select ".config\Flight_table::DEPART_TIME." from ".config\Flight_table::NAME.
