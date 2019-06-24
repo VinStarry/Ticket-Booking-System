@@ -249,9 +249,9 @@ class admin_functions {
             $result = $this->conn->link->query($query);
             $ret = array();
             while (list($f_date, $fid, $etaken, $ctaken, $ftaken, $revenue, $fn, $en, $cn) = $result->fetch_row()) {
-                $e_taken_rate = round((int)$etaken * 1.0 / (int)$en, 2) ;
-                $c_taken_rate = round((int)$ctaken * 1.0 / (int)$cn, 2) ;
-                $f_taken_rate = round((int)$ftaken * 1.0 / (int)$fn, 2) ;
+                $e_taken_rate = ((round((int)$etaken * 1.0 / (int)$en, 2)) < 0.0) ? 1.3 : round((int)$etaken * 1.0 / (int)$en, 2) ;
+                $c_taken_rate = ((round((int)$ctaken * 1.0 / (int)$cn, 2)) < 0.0) ? 1.3 : round((int)$ctaken * 1.0 / (int)$cn, 2) ;
+                $f_taken_rate = ((round((int)$ftaken * 1.0 / (int)$fn, 2)) < 0.0) ? 1.3 : round((int)$ftaken * 1.0 / (int)$fn, 2);
                 $ret[] = array($f_date, $fid, $etaken, $ctaken, $ftaken, $revenue, $fn, $en, $cn, $e_taken_rate, $c_taken_rate, $f_taken_rate);
             }
             $result->free();
